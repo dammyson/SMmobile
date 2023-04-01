@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "616980022709",
+    "project_id": "sendmonny-d7d1c",
+    "storage_bucket": "sendmonny-d7d1c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616980022709:android:f0eb69c8d48a38408905fc",
+        "android_client_info": {
+          "package_name": "com.sendmonny"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616980022709-n81rch8m60qilp2rnilj4usnq9qokdrp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTqY1j98DaYGNzQ6CCA25M2U5Xp9o87b0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616980022709-n81rch8m60qilp2rnilj4usnq9qokdrp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
