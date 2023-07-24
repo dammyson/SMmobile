@@ -9,10 +9,11 @@ import LinearGradient from 'react-native-linear-gradient';
 
 
 import color from '../../component/color'
+import { getUser, getWallet } from '../../utilities';
 
 
 export default class Withdraw extends Component {
-    
+
     constructor(props) {
         super(props);
         this.state = {
@@ -23,25 +24,15 @@ export default class Withdraw extends Component {
             data: '',
             wallet: '',
             qrCode: '',
-            selected_category:0,
+            selected_category: 0,
         };
     }
-    
 
 
-    componentWillMount() {
-        AsyncStorage.getItem('data').then((value) => {
-            if (value == '') { } else {
-                this.setState({ data: JSON.parse(value) })
-            }
-        })
 
-            AsyncStorage.getItem('wallet').then((value) => {
-                if (value == '') { } else {
-                    this.setState({ wallet: JSON.parse(value) })
-                }
-            })
-    
+    async componentWillMount() {
+        this.setState({ data: JSON.parse(await getUser()) })
+        this.setState({ wallet: JSON.parse(await getWallet()) })
     }
     openShareScreen() {
         if (this.qrCode) {
@@ -66,7 +57,7 @@ export default class Withdraw extends Component {
 
                         <View style={{ alignItems: 'center', flexDirection: 'row', }}>
                             <TouchableOpacity style={styles.arrowContainer} onPress={() => {
-                             this.props.navigation.goBack()
+                                this.props.navigation.goBack()
                             }}>
                                 <Icon
                                     name="arrowleft"
@@ -79,61 +70,60 @@ export default class Withdraw extends Component {
 
                             <View style={{ alignItems: 'center', flex: 1 }}>
 
-                                <Text style={[styles.title, { fontWeight: '600' }]}> Withdrawer </Text>
+                                <Text style={[styles.title, { fontWeight: '600' }]}> Withdrawal </Text>
                             </View>
                             <View style={{ width: 40 }}></View>
 
                         </View>
 
 
-                      
+
 
 
 
 
                     </View>
 
-                      <View style={styles.card} >
-
-
-                          
-<Text style={styles.price}>₦{this.state.wallet.balance}</Text>
-<Text style={{  paddingBottom: 20, paddingTop: 20,   fontSize: 15, color:color.button_blue}}> is your balance </Text>
-</View>
+                    <View style={styles.card} >
+                        <Text style={styles.price}>₦{this.state.wallet.balance}</Text>
+                        <Text style={{ paddingBottom: 20, paddingTop: 20, fontSize: 15, color: color.button_blue }}> is your balance </Text>
+                    </View>
                     <LinearGradient colors={['#4b47b7', '#0f0e43']}
                         style={styles.mainbody}
                     >
                         <View style={styles.merchangContainer}>
-                  <TextInput
-                    placeholder="Enter amount"
-                    placeholderTextColor='#d1d1d1'
-                    returnKeyType="next"
-                    onSubmitEditing={() => this.passwordInput.focus()}
-                    keyboardType="numeric"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={styles.input}
-                    onChangeText={text => this.setState({ username: text })}
-                  />
+                            <TextInput
+                                placeholder="Enter amount"
+                                placeholderTextColor='#d1d1d1'
+                                returnKeyType="next"
+                                onSubmitEditing={() => this.passwordInput.focus()}
+                                keyboardType="numeric"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                onChangeText={text => this.setState({ username: text })}
+                            />
 
-                </View>
-                <Text style={{  paddingBottom: 10, paddingTop: 10,   fontSize: 15, color:color.white,   marginLeft: 30,}}> Select Bank </Text>
-                <View style={{ flex: 1,  borderRadius: 13, borderWidth:1, borderColor:'#fff' ,    marginLeft: 30,
-        marginRight: 30,}}>
-         <FlatList
-            style={{ paddingBottom: 5 }}
-            data={this.state.wallet.banks}
-            renderItem={this.renderItem}
-            keyExtractor={item => item.id}
-            ItemSeparatorComponent={this.renderSeparator}
-            ListHeaderComponent={this.renderHeader}
-          />
+                        </View>
+                        <Text style={{ paddingBottom: 10, paddingTop: 10, fontSize: 15, color: color.white, marginLeft: 30, }}> Select Bank </Text>
+                        <View style={{
+                            flex: 1, borderRadius: 13, borderWidth: 1, borderColor: '#fff', marginLeft: 30,
+                            marginRight: 30,
+                        }}>
+                            <FlatList
+                                style={{ paddingBottom: 5 }}
+                                data={this.state.wallet.banks}
+                                renderItem={this.renderItem}
+                                keyExtractor={item => item.id}
+                                ItemSeparatorComponent={this.renderSeparator}
+                                ListHeaderComponent={this.renderHeader}
+                            />
 
-                </View>
+                        </View>
 
- <Button onPress={() =>  this.props.navigation.navigate('qr')} style={styles.buttonContainer} block iconLeft>
-                  <Text style={{ color: color.button_blue, fontWeight: '400', fontSize: 14 }}>Withdraw</Text>
-                </Button>
+                        <Button onPress={() => this.props.navigation.navigate('qr')} style={styles.buttonContainer} block iconLeft>
+                            <Text style={{ color: color.button_blue, fontWeight: '400', fontSize: 14 }}>Withdraw</Text>
+                        </Button>
 
 
 
@@ -144,72 +134,72 @@ export default class Withdraw extends Component {
         );
     }
 
-  
-    _handleCategorySelect = (index) => { this.setState({selected_category: index});  }
+
+    _handleCategorySelect = (index) => { this.setState({ selected_category: index }); }
     renderItem = ({ item }) => {
         return (
-       
-                <TouchableOpacity   style={this.state.selected_category === item.id ?  
-                 styles.blackcardo : styles.blackcard}
-                 onPress={() => this._handleCategorySelect(item.id)}
-       underlayColor="red">
-                           <TouchableOpacity style={{flex:1}}>
-                             <Text style={styles.bank}>{item.beneficiary_bank_name}</Text>
-                             <Text style={styles.number}>{item.beneficiary_account_number}</Text>
-                             <Text style={styles.name}>{item.beneficiary_account_name}</Text>
-                          </TouchableOpacity> 
-                          <TouchableOpacity style={{ marginLeft: 20 }}>
-                  <Icon
-                    name="trash"
-                    size={30}
-                    type='font-awesome'
-                    color='#fff'
-                  />
+
+            <TouchableOpacity style={this.state.selected_category === item.id ?
+                styles.blackcardo : styles.blackcard}
+                onPress={() => this._handleCategorySelect(item.id)}
+                underlayColor="red">
+                <TouchableOpacity style={{ flex: 1 }}>
+                    <Text style={styles.bank}>{item.beneficiary_bank_name}</Text>
+                    <Text style={styles.number}>{item.beneficiary_account_number}</Text>
+                    <Text style={styles.name}>{item.beneficiary_account_name}</Text>
                 </TouchableOpacity>
-                </TouchableOpacity>  
-               
-                )
-         
+                <TouchableOpacity style={{ marginLeft: 20 }}>
+                    <Icon
+                        name="trash"
+                        size={30}
+                        type='font-awesome'
+                        color='#fff'
+                    />
+                </TouchableOpacity>
+            </TouchableOpacity>
+
+        )
+
     }
 }
 var categories = [
     {
-        id:1,
-      bank: 'Access Bank',
-      number: '3082501546',
-      name: 'Ayeni Ayobami',
-     
+        id: 1,
+        bank: 'Access Bank',
+        number: '3082501546',
+        name: 'Ayeni Ayobami',
+
     },
     {
-        id:2,
+        id: 2,
         bank: 'Access Bank',
         number: '3082501546',
         name: 'Ayeni Ayobami',
     },
     {
-        id:3,
-      bank: 'Access Bank',
+        id: 3,
+        bank: 'Access Bank',
         number: '3082501546',
         name: 'Ayeni Ayobami',
     },
     {
-        id:4,
-      bank: 'Access Bank',
+        id: 4,
+        bank: 'Access Bank',
         number: '3082501546',
         name: 'Ayeni Ayobami',
     },
     {
-        id:5,
-      bank: 'Access Bank',
+        id: 5,
+        bank: 'Access Bank',
         number: '3082501546',
         name: 'Ayeni Ayobami',
     }
-  ];
+];
 const styles = StyleSheet.create({
     mainbody: {
         flex: 1,
-      
-     
+
+
         borderTopRightRadius: 30,
         borderTopLeftRadius: 30
     },
@@ -288,8 +278,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginLeft: 30,
         marginRight: 30,
-      },
-      input: {
+    },
+    input: {
         height: 45,
         borderColor: '#3E3E3E',
         marginBottom: 15,
@@ -300,58 +290,58 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#fff',
         borderColor: '#ffffff',
-      },
-      buttonContainer: {
+    },
+    buttonContainer: {
         backgroundColor: color.slide_color_dark,
         marginLeft: 30,
         marginRight: 30,
         marginTop: 20,
         borderRadius: 15,
-        marginBottom: 20, 
-      },
+        marginBottom: 20,
+    },
 
-  blackcard: {
-    borderRadius: 15,
-    margin: 12,
-    padding: 15,
-    justifyContent:'center',
-    alignItems: 'flex-start',
-    shadowRadius: 2,
-    elevation: 2,
-    flexDirection: 'row',
-    borderWidth:1,
-    borderColor:'#fff'
-    
-  },
-  blackcardo: {
-    borderRadius: 15,
-    margin: 12,
-    padding: 15,
-    justifyContent:'center',
-    alignItems: 'flex-start',
-    shadowRadius: 2,
-    elevation: 2,
-    flexDirection: 'row',
-    borderWidth:1,
-    borderColor:'#fff',
-    backgroundColor: '#000'
-    
-  },
+    blackcard: {
+        borderRadius: 15,
+        margin: 12,
+        padding: 15,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        shadowRadius: 2,
+        elevation: 2,
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#fff'
 
-  bank: { 
-    fontSize: 15,
-  color: '#fff',
-  fontFamily: 'Montserrat-Bold'
-  },
-  number: {
-    fontSize: 15,
-    color: '#fff',
-    fontFamily: 'Montserrat-Regular'
-  },  
-  name: {
-    fontSize: 15,
-    fontFamily: 'Montserrat-Regular',
-    color: '#fff'
-  },
+    },
+    blackcardo: {
+        borderRadius: 15,
+        margin: 12,
+        padding: 15,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        shadowRadius: 2,
+        elevation: 2,
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#fff',
+        backgroundColor: '#000'
+
+    },
+
+    bank: {
+        fontSize: 15,
+        color: '#fff',
+        fontFamily: 'Montserrat-Bold'
+    },
+    number: {
+        fontSize: 15,
+        color: '#fff',
+        fontFamily: 'Montserrat-Regular'
+    },
+    name: {
+        fontSize: 15,
+        fontFamily: 'Montserrat-Regular',
+        color: '#fff'
+    },
 });
 

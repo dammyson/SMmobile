@@ -85,7 +85,7 @@ export default class Complete extends Component {
         this.setState({ loading: false });
         console.warn(statusCode, data)
         if (statusCode == 201) {
-          AsyncStorage.setItem('step', 'two');
+          AsyncStorage.setItem('step', 'three');
           AsyncStorage.setItem('data', JSON.stringify(data.data));
           this.props.navigation.replace('addpin')
         } else if (statusCode == 422) {

@@ -7,7 +7,7 @@ import {
   Text,
   TextInput
 } from 'react-native'
-import firebase from 'react-native-firebase'
+
 
 class PhoneAuthScreen extends Component {
   state = {
@@ -23,21 +23,21 @@ class PhoneAuthScreen extends Component {
 
   handleSendCode = () => {
     // Request to send OTP
-    if (this.validatePhoneNumber()) {
-      firebase
-        .auth()
-        .signInWithPhoneNumber(this.state.phone)
-        .then(confirmResult => {
-          this.setState({ confirmResult })
-        })
-        .catch(error => {
-          alert(error.message)
+    // if (this.validatePhoneNumber()) {
+    //   firebase
+    //     .auth()
+    //     .signInWithPhoneNumber(this.state.phone)
+    //     .then(confirmResult => {
+    //       this.setState({ confirmResult })
+    //     })
+    //     .catch(error => {
+    //       alert(error.message)
 
-          console.log(error)
-        })
-    } else {
-      alert('Invalid Phone Number')
-    }
+    //       console.log(error)
+    //     })
+    // } else {
+    //   alert('Invalid Phone Number')
+    // }
   }
 
   changePhoneNumber = () => {
@@ -46,21 +46,21 @@ class PhoneAuthScreen extends Component {
 
   handleVerifyCode = () => {
     // Request for OTP verification
-    const { confirmResult, verificationCode } = this.state
-    if (verificationCode.length == 6) {
-      confirmResult
-        .confirm(verificationCode)
-        .then(user => {
-          this.setState({ userId: user.uid })
-          alert(`Verified! ${user.uid}`)
-        })
-        .catch(error => {
-          alert(error.message)
-          console.log(error)
-        })
-    } else {
-      alert('Please enter a 6 digit OTP code.')
-    }
+    // const { confirmResult, verificationCode } = this.state
+    // if (verificationCode.length == 6) {
+    //   confirmResult
+    //     .confirm(verificationCode)
+    //     .then(user => {
+    //       this.setState({ userId: user.uid })
+    //       alert(`Verified! ${user.uid}`)
+    //     })
+    //     .catch(error => {
+    //       alert(error.message)
+    //       console.log(error)
+    //     })
+    // } else {
+    //   alert('Please enter a 6 digit OTP code.')
+    // }
   }
 
   renderConfirmationCodeView = () => {

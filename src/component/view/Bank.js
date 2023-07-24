@@ -1,45 +1,43 @@
 // React native and others libraries imports
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, AsyncStorage, FlatList, Dimensions, TextInput, StyleSheet, TouchableOpacity, StatusBar, ImageBackground } from 'react-native';
-import { Container, Content, View, Text } from 'native-base';
+import { View, Text } from 'native-base';
 import { Card, Icon, SocialIcon } from 'react-native-elements'
 import LinearGradient from 'react-native-linear-gradient';
 import { PulseIndicator } from 'react-native-indicators';
 import URL from '../server'
 import color from '../color'
 import ActivityIndicator from './ActivityIndicator'
-import { getToken, getWallet, processResponse } from '../utilities';
+
+import { baseUrl, getToken } from '../../utilities';
+
+import * as Animatable from 'react-native-animatable';
+import { font } from '../../constants';
+import { lightTheme } from '../../theme/colors';
+
+const Bank = ({ onClose, onSelect }) => {
+
+  const [merchant, setMerchant] = useState('ay345');
+  const [items, setItems] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [viewBalance, setViewBalance] = useState(false);
+  const [loading, setLoading] = useState(true);
+ 
+  const [bankId, setBankId] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(0);
+  const [search, setSearch] = useState('');
+  const [bankData, setBankData] = useState()
+  const [arrayholder, setArrayholder]=useState([])
 
 
-export default class Bank extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      merchant: 'ay345',
-      items: [],
-      visible: false,
-      view_balance: false,
-      loading: true,
-      auth: '',
-      bank_id: '',
-      selected_category: 0,
-      search: '',
-    };
-    this.arrayholder = [];
+  const initiate = async () => {
+    getBanksRequest(await getToken())
   }
 
-
-  async componentWillMount() {
-    this.setState({
-      auth: await getToken(),
-    })
-    this.getBanksRequest()
-  }
-
-  getBanksRequest() {
-    const { auth } = this.state;
-    this.setState({ loading: true });
-    fetch(URL.urltwo + '/ext/banks/list', {
+  const getBanksRequest = (auth) => {
+   
+    setLoading(true)
+    fetch(baseUrl() + '/bank', {
       method: 'GET', headers: {
         Accept: 'application/json',
         'Authorization': 'Bearer ' + auth,
@@ -48,21 +46,23 @@ export default class Bank extends Component {
     })
       .then(res => res.json())
       .then(res => {
-        console.warn(res)
-        if (res.responsecode == '00') {
-          this.sortBank(res.banklist);
-          console.warn(res.banklist)
+        console.warn(res);
+        setLoading(false)
+        if (res.status) {
+          sortBank(res.data.data);
+         // setBankData(res.data.data);
+        
 
         } else {
-          Alert.alert(
-            'Alert',
-            'Something went wrong please try again',
-            [
-              { text: 'Cancel', onPress: () => console.log('Cancel Pressed!') },
-              { text: 'Retry', onPress: () => this.getBanksRequest(auth) },
-            ],
-            { cancelable: false }
-          )
+          // Alert.alert(
+          //   'Alert',
+          //   'Something went wrong please try again',
+          //   [
+          //     { text: 'Cancel', onPress: () => console.log('Cancel Pressed!') },
+          //     { text: 'Retry', onPress: () => this.getBanksRequest(auth) },
+          //   ],
+          //   { cancelable: false }
+          // )
         }
 
 
@@ -70,138 +70,97 @@ export default class Bank extends Component {
       })
       .catch(error => {
         alert(error.message);
-        this.setState({ loading: false })
+        setLoading(false)
+        //this.setState({ loading: false })
       });
 
 
   };
 
+  useEffect(() => {
+    initiate()
+  }, []);
 
-  sortBank(list) {
+  const sortBank = (list) => {
     let instant_array = [];
-    let banks = 
-    [
-    '3LINE',
-    'AB MICROFINANCE BANK',
-    'ABBEY MORTGAGE BANK',
-    'ACCESS BANK PLC',
-    'ACCESS(DIAMOND)BANK',
-    'ASO SAVINGS AND LOANS',
-    'BAOBAB MICROFINANCE BANK',
-    'CITIBANK NIGERIA',
-    'ECOBANK BANK',
-    'E-TRANZACT',
-    'FIDELITY BANK',
-    'FCMB',
-    'FIRST BANK OF NIGERIA PLC',
-    'FORTIS MICROFINANCE BANK',
-    'FSDH MERCHANT BANK',
-    'GUARANTY TRUST BANK PLC',
-    'HERITAGE BANK',
-    'JAIZ BANK',
-    'KEYSTONE BANK',
-    'KUDA MICROFINANCE BANK',
-    'PAYATTITUDE ONLINE',
-    'POLARIS BANK',
-    'PROVIDUS BANK','RENMONEY MICROFINANCE BANK','RUBIES MICROFINANCE BANK',
-    'STANBIC IBTC BANK PLC',
-    'STANDARD CHARTERED BANK',
-    'STERLING BANK PLC',
-    'SUNTRUST BANK',
-    'TITAN TRUST BANK',
-    'UNION BANK','UNITED BANK FOR AFRICA PLC',
-    'UNITY BANK',
-    'VFD MICROFINANCE BANK',
-    'VISA MICROFIN BANK',
-    'WEMA/ALAT', 'ZENITH BANK PLC',
-     ];
+    let banks =
+      [
+        '3LINE',
+        'AB MICROFINANCE BANK',
+        'ABBEY MORTGAGE BANK',
+        'ACCESS BANK PLC',
+        'ACCESS(DIAMOND)BANK',
+        'ASO SAVINGS AND LOANS',
+        'BAOBAB MICROFINANCE BANK',
+        'CITIBANK NIGERIA',
+        'ECOBANK BANK',
+        'E-TRANZACT',
+        'FIDELITY BANK',
+        'FCMB',
+        'FIRST BANK OF NIGERIA PLC',
+        'FORTIS MICROFINANCE BANK',
+        'FSDH MERCHANT BANK',
+        'GUARANTY TRUST BANK PLC',
+        'HERITAGE BANK',
+        'JAIZ BANK',
+        'KEYSTONE BANK',
+        'KUDA MICROFINANCE BANK',
+        'PAYATTITUDE ONLINE',
+        'POLARIS BANK',
+        'PROVIDUS BANK', 'RENMONEY MICROFINANCE BANK', 'RUBIES MICROFINANCE BANK',
+        'STANBIC IBTC BANK PLC',
+        'STANDARD CHARTERED BANK',
+        'STERLING BANK PLC',
+        'SUNTRUST BANK',
+        'TITAN TRUST BANK',
+        'UNION BANK', 'UNITED BANK FOR AFRICA PLC',
+        'UNITY BANK',
+        'VFD MICROFINANCE BANK',
+        'VISA MICROFIN BANK',
+        'WEMA/ALAT', 
+        'SAFE HAVEN MICROFINANCE BANK',
+        'SAFE HAVEN SANDBOX BANK',
+        'ZENITH BANK PLC',
+      ];
+      
+      console.info(list)
     for (let i = 0; i < list.length; i++) {
-
-      if (banks.includes(list[i].bankname)) {
+      if (banks.includes(list[i].name)) {
         instant_array.push(
           list[i]
         )
       }
 
     }
-    this.arrayholder = instant_array;
-    this.setState({ bank_data: instant_array })
-    this.setState({ loading: false })
+
+    // console.info(instant_array)
+   // arrayholder = instant_array;
+   setArrayholder(instant_array)
+    setBankData(instant_array)
+
   }
 
 
-  searchFilterFunction = search => {
-    this.setState({ search });
-    const newData = this.arrayholder.filter(item => {
-      const itemData = `${item.bankname.toUpperCase()}`;
+  const searchFilterFunction = search => {
+    setSearch(search)
+    const newData = arrayholder.filter(item => {
+      const itemData = `${item.name.toUpperCase()}`;
       const textData = search.toUpperCase();
       return itemData.indexOf(textData) > -1;
     });
-    this.setState({
-      bank_data: newData,
-    });
-
+    setBankData(newData)
   };
 
-  render() {
-    const { onClose, items } = this.props;
-  
-    return (
-      <View style={styles.backgroundImage}>
-        <StatusBar barStyle="dark-content" hidden={false} backgroundColor="transparent" />
-        <View style={styles.body}>
-          <View style={{ flex: 1 }}>
-            <View style={{marginLeft:20, marginRight: 20, flexDirection: 'row', alignItems: 'center', paddingTop: 1, paddingBottom: 10 }}>
-              <Text style={{ fontFamily: 'Montserrat-Bold', fontSize: 17, textAlign: 'left', paddingBottom: 10, marginTop: 25, flex: 1 }}>Select bank </Text>
-              <TouchableOpacity onPress={() => onClose()} style={{ marginLeft: 10, backgroundColor: '#fff' }}>
-                <Icon
-                  name="close"
-                  size={20}
-                  type='antdesign'
-                  color="#000"
-                />
-              </TouchableOpacity>
 
-            </View>
-            <TextInput
-              placeholder="search list"
-              placeholderTextColor='#4b544d'
-              returnKeyType="next"
-              keyboardType="default"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.search_input}
-              maxLength={10}
-              onChangeText={this.searchFilterFunction}
-            />
-            <View style={{ paddingTop: 1, paddingBottom: 10, flex: 1, }}>
-              <FlatList
-                style={{ paddingBottom: 5 }}
-                data={this.state.bank_data}
-                renderItem={this.renderItem}
-                keyExtractor={item => item.id}
-               
-              />
-            </View>
-          </View>
-        </View>
-        {this.state.loading ? <ActivityIndicator /> : null}
-      </View>
-
-    );
-  }
-
-
-  _handleCategorySelect = (index) => {
-    const { onSelect, } = this.props;
+  const _handleCategorySelect = (index) => {
     onSelect(index);
   }
-  renderItem = ({ item, }) => {
+  const renderItem = ({ item, }) => {
     return (
       <TouchableOpacity style={{ marginLeft: 10, marginRight: 20, marginBottom: 10 }}
-        onPress={() => this._handleCategorySelect(item)} underlayColor="red">
+        onPress={() => _handleCategorySelect(item)} underlayColor="red">
         <View style={{ flex: 1, flexDirection: 'row' }}>
-          <Text style={styles.nameList}>{item.bankname}</Text>
+          <Text style={styles.nameList}>{item.name}</Text>
           <Icon
             active
             name="dots-vertical"
@@ -209,96 +168,144 @@ export default class Bank extends Component {
             color='#FFF'
           />
         </View>
-
+  
       </TouchableOpacity>
-
+  
     )
-
+  
   }
+
+  return (
+    <>
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          backgroundColor: lightTheme.INACTIVE_COLOR + "90"
+        }}
+      >
+
+      </View>
+
+      <View
+        style={styles.Container}
+
+      >
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', }}>
+
+        </View>
+
+
+        <Animatable.View style={{ height: Dimensions.get('window').height - 150, alignItems: 'center', justifyContent: 'center', }} animation="fadeInUpBig" >
+
+          <View style={styles.body_top}>
+            <View style={{ justifyContent: 'center', alignItems: 'center', width: 40 }}>
+              <TouchableOpacity onPress={() => onClose()}>
+
+
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontSize: 18, margin: 7, flex: 1, fontFamily: font.BOLD, color: lightTheme.PRIMARY_COLOR, textAlign: 'center', marginRight: 10 }}>{"Select Bank"}</Text>
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginRight: 25 }}>
+
+              <TouchableOpacity onPress={() => onClose()}>
+                <Icon
+                  name="closecircle"
+                  size={20}
+                  type='antdesign'
+                  color={"#000"}
+                />
+
+              </TouchableOpacity>
+
+
+            </View>
+          </View>
+          <View style={styles.body}>
+
+            <View style={{ flex: 1 }}>
+              <TextInput
+                placeholder="search list"
+                placeholderTextColor='#4b544d'
+                returnKeyType="next"
+                keyboardType="default"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={styles.search_input}
+                maxLength={10}
+                onChangeText={searchFilterFunction}
+              />
+              <View style={{ paddingTop: 1, paddingBottom: 10, flex: 1, }}>
+                <FlatList
+                  style={{ paddingBottom: 5 }}
+                  data={bankData}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.id}
+
+                />
+              </View>
+            </View>
+          </View>
+          {loading ? <ActivityIndicator /> : null}
+
+
+        </Animatable.View>
+      </View>
+
+    </>
+
+  );
+
+
+
+
 }
 
-
-Bank;
+export default Bank;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  Container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
- 
-  backgroundImage: {
+  body_top: {
+    backgroundColor: "#fff",
     width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    backgroundColor: '#fff'
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    flexDirection: 'row'
+
   },
   body: {
-    flex: 1,
-    width: Dimensions.get('window').width,
-    backgroundColor: '#fff'
-  },
-  mainbody: {
     width: Dimensions.get('window').width,
     flex: 1,
-    marginRight: 13,
-    marginLeft: 13,
-
+    backgroundColor: '#fff',
 
   },
-  title: {
-    marginTop: 2,
-    marginBottom: 2,
-    marginRight: 13,
-    marginLeft: 13,
-    fontSize: 15,
-    color: '#000',
-    textAlign: 'center',
-    fontWeight: '400',
-    fontFamily: 'Poppins-Bold'
-  },
-  textInputContainer: {
-    marginRight: 25,
-    marginLeft: 25,
-  },
-  input: {
-    height: 65,
+  search_input:{
+    height: 40,
     borderColor: '#3E3E3E',
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#d1d1d1',
-    paddingLeft: 12
+    paddingLeft: 12,
+    backgroundColor: color.grey,
+    marginHorizontal:20
   },
-
-  nameList: {
-    fontSize: 14,
-    color: '#000',
-    flex: 1,
-    marginLeft: 10,
-    fontFamily: 'Poppins-SemiBold'
-  },
-  modal: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    backgroundColor: "#fff"
-
-  },
-  search_input: {
-    height: 40,
-    marginBottom: 10,
-    color: '#000',
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginLeft: 20,
-    marginRight: 20,
-    borderColor: '#000',
-    borderWidth: 0.8,
-
-  },
+  nameList:{
+    fontSize: 12, 
+    color: '#3E3E3E', 
+    fontFamily: font.SEMI_BOLD, 
+    marginHorizontal:20
+  }
 });
 

@@ -9,7 +9,7 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, KeyboardAvoidingView, View} from 'react-native';
 
-import AppNavigatori from '../../component/navigation/MerchantTabs';
+import AppNavigator from '../../navigation/HomeTabsNavigation';
 
 
 
@@ -18,7 +18,7 @@ export default class Landing extends Component{
   render() {
     return (
       <KeyboardAvoidingView style={{flex:1}} behavior="height" enabled>
-       <AppNavigatori/>
+       <AppNavigator/>
       </KeyboardAvoidingView>
     );
   }

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Text, StyleSheet, TouchableOpacity, View, Dimensions, ImageBackground, Image, } from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
 import color from '../../component/color'
+import { lightTheme } from '../../theme/colors';
 
 
 const slides = [
@@ -65,14 +66,14 @@ export default class Intro extends Component {
   }
   _renderNextButton = () => {
     return (
-      <View  style={{ backgroundColor:color.slide_color_dark, borderColor: color.slide_color_dark, borderWidth: 1, justifyContent: 'center', borderRadius: 10, marginTop: 10, }}>
+      <View  style={{ backgroundColor:lightTheme.PRIMARY_COLOR, borderColor: color.slide_color_dark, borderWidth: 1, justifyContent: 'center', borderRadius: 10, marginTop: 10, }}>
         <Text style={styles.actionbutton}>Next</Text>
       </View>
     );
   };
   _renderDoneButton = () => {
     return (
-      <TouchableOpacity  onPress={() =>  this.props.navigation.navigate('Welcome')}  style={{ backgroundColor:color.slide_color_dark, borderColor: color.slide_color_dark, borderWidth: 1, justifyContent: 'center', borderRadius: 10, marginTop: 10, }}>
+      <TouchableOpacity  onPress={() =>  this.props.navigation.navigate('Welcome')}  style={{ backgroundColor: lightTheme.PRIMARY_COLOR, borderColor: color.slide_color_dark, borderWidth: 1, justifyContent: 'center', borderRadius: 10, marginTop: 10, }}>
         <Text style={styles.actionbutton}>Done</Text>
       </TouchableOpacity>
 
@@ -86,7 +87,7 @@ export default class Intro extends Component {
         showNextButton={true}
         renderDoneButton={this._renderDoneButton}
         renderNextButton={this._renderNextButton}
-        activeDotStyle={{ backgroundColor: color.slide_color_dark }}
+        activeDotStyle={{ backgroundColor: lightTheme.PRIMARY_COLOR}}
       />
     );
   }

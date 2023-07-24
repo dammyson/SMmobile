@@ -9,8 +9,8 @@ import OTPInputView from '@twotalltotems/react-native-otp-input'
 import color from '../../component/color'
 import { getToken, processResponse } from '../../component/utilities';
 import ActivityIndicator from '../../component/view/ActivityIndicator'
-import ResetPinOne from '../../component/view/ResetPin_First'
-import ResetPinTwo from '../../component/view/ResetPin_Second'
+import ResetPinOne from '../../component/view/ResetPinFirst'
+import ResetPinTwo from '../../component/view/ResetPinSecond'
 export default class ResetPin extends Component {
   constructor(props) {
     super(props);

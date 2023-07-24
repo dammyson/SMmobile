@@ -11,7 +11,7 @@ import color from '../../component/color'
 
 import Modal, { SlideAnimation, ModalContent } from 'react-native-modals';
 import { PulseIndicator } from 'react-native-indicators';
-import { getToken, processResponse,getWallet } from '../../component/utilities';
+import { getToken, processResponse, getWallet, getUser, baseUrl } from '../../utilities';
 
 export default class AddBank extends Component {
   constructor(props) {
@@ -35,7 +35,13 @@ export default class AddBank extends Component {
     this.arrayholder = [];
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    console.warn(await getToken());
+    console.warn(await getWallet());
+    console.warn(await getUser());
+
+    this.setState({ wallet: JSON.parse(await getWallet()) })
+
     AsyncStorage.getItem('data').then((value) => {
       if (value == '') { } else {
         this.setState({ data: JSON.parse(value) })
@@ -43,18 +49,13 @@ export default class AddBank extends Component {
       }
 
     })
-    AsyncStorage.getItem('wallet').then((value) => {
-      if (value == '') { } else {
-        this.setState({ wallet: JSON.parse(value) })
-      }
-    })
 
 
   }
 
 
 
- async addBankProcess() {
+  async addBankProcess() {
     const { onAdd, onClose } = this.props;
     const { bank_name, bank_code, account_number, account_name, wallet } = this.state
     if (account_number == "" || account_name == "" || bank_code == "") {
@@ -65,18 +66,24 @@ export default class AddBank extends Component {
     }
 
     this.setState({ loading: true })
-    const formData = new FormData();
-    formData.append('wallet_id', wallet.id);
-    formData.append('beneficiary_bank_name', bank_name);
-    formData.append('beneficiary_bank_code', bank_code);
-    formData.append('beneficiary_account_number', account_number);
-    formData.append('beneficiary_account_name', account_name);
-    console.warn(data.token);
 
-    fetch(URL.urltwo + '/wallet/account/add', {
+    var formData = JSON.stringify({
+      is_wallet: false,
+      account_name: account_name,
+      account_number: account_number,
+      bank_name: bank_name,
+      bank_code: bank_code,
+      reciever_wallet_id: paymentDetail.wallet_id,
+
+    })
+
+
+
+    console.warn(baseUrl() + '/beneficiaries')
+    fetch(baseUrl() + '/beneficiaries', {
       method: 'POST', headers: {
         Accept: 'application/json',
-        'Authorization': 'Bearer ' +  await getToken(),
+        'Authorization': 'Bearer ' + await getToken(),
       }, body: formData,
     })
       .then(this.processResponse)
@@ -119,11 +126,11 @@ export default class AddBank extends Component {
 
   getBeneficiaryProcess(text) {
 
-    const { bank_code, data } = this.state
+    const { bank_code } = this.state
 
 
     if (text.length == 10 && bank_code != "") {
-      this.bRequest(bank_code, text, data.token)
+      this.bRequest(bank_code, text)
     } else if (text.length == 10 && bank_code == "") {
       Alert.alert('Validation failed', 'Select Bank and enter account number again', [{ text: 'Okay' }])
     }
@@ -133,22 +140,22 @@ export default class AddBank extends Component {
 
   }
 
- async bRequest(bank_code, account_number_entered, token) {
+  async bRequest(bank_code, account_number_entered) {
 
 
     this.setState({ bloading: true, account_number: account_number_entered })
-    const formData = new FormData();
 
-    formData.append('bankcode', bank_code);
-    formData.append('accountnumber', account_number_entered);
-
-    console.warn(token);
-
-    fetch(URL.urltwo + '/ext/banks/beneficiary-details', {
+    const formData = {
+      account_number: account_number_entered,
+      bank_code: bank_code
+    }
+    console.warn(formData)
+    fetch(baseUrl() + '/bank', {
       method: 'POST', headers: {
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         'Authorization': 'Bearer ' + await getToken(),
-      }, body: formData,
+      }, body: JSON.stringify(formData),
     })
       .then(res => res.json())
       .then(res => {
@@ -169,7 +176,7 @@ export default class AddBank extends Component {
         console.warn(error);
         alert(error.message);
         this.setState({ bloading: false })
-      });
+      }).finally(()=>  this.setState({bloading: false}) )
   }
 
   processResponse(response) {
@@ -216,18 +223,18 @@ export default class AddBank extends Component {
     }
     return (
       <>
-        {this.state.view_banks ?
-          this._Bank() :
-          <Container style={{ backgroundColor: 'transparent' }}>
-            <Content>
+
+        <Container style={{ backgroundColor: 'transparent' }}>
+          <Content>
 
 
-              {this.renderBody()}
+            {this.renderBody()}
 
 
-            </Content>
-          </Container>
-        }
+          </Content>
+          {this.state.view_banks ? this._Bank() : null}
+        </Container>
+
       </>
 
     );
@@ -318,8 +325,8 @@ export default class AddBank extends Component {
 
   selBank(v) {
     this.setState({
-      bank_code: v.bankcode,
-      bank_name: v.bankname,
+      bank_code: v.bankCode,
+      bank_name: v.name,
       view_banks: false
     });
   }

@@ -67,7 +67,7 @@ export default class Scan extends Component {
 
 async componentDidMount() {
      const { operation } = this.props.route.params;
-     console.warn(operation);
+     console.warn( await getToken());
     this.setState({ operation: operation });
 
     this.setState({ 
@@ -129,7 +129,7 @@ async componentDidMount() {
 
     } else if (operation == 'pay') {
 
-      var action_url = '/wallets/transfer'
+      var action_url = '/transfers'
       var formData = JSON.stringify({
         sender_wallet_id: wallet.id,
         amount: Number(ammount),
@@ -148,12 +148,12 @@ async componentDidMount() {
       loading: true,
     })
 
-    console.warn(formData);
+    console.warn("MAD O",formData);
 
     fetch(baseUrl() + action_url, {
       method: 'POST', headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+         Accept: 'application/json',
         'Authorization': 'Bearer ' + auth,
       }, body: formData,
     })
@@ -204,7 +204,6 @@ async componentDidMount() {
     let cat = [];
     for (var i = 0; i < slides.length; i++) {
       cat.push(
-
         <View style={{ alignItems: 'center' }}>
           <Image style={styles.image} source={slides[i].image} />
           <Text style={{ textAlign: 'center', fontFamily: 'Poppins-Bold', color: '#3E3E3E', fontSize: 17, fontWeight: '900', marginTop: 20, marginLeft: 20, marginRight: 20 }}>{slides[i].title} </Text>

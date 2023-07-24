@@ -1,6 +1,6 @@
 // React native and others libraries imports
-import React, { Component } from 'react';
-import { Alert, StatusBar, TextInput, Dimensions,Switch, StyleSheet, Image, TouchableOpacity, AsyncStorage } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Alert, StatusBar, TextInput, Dimensions, Switch, StyleSheet, Image, TouchableOpacity, AsyncStorage } from 'react-native';
 import { View, Text, Content, Container, Button, Toast } from 'native-base';
 import { Icon, Avatar } from 'react-native-elements';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -16,102 +16,126 @@ import Pin from '../../component/view/Pin';
 import Success from '../../component/view/Success'
 import Error from '../../component/view/Error'
 import Bank from '../../component/view/Bank'
-import { getToken, getWallet, getPref, getUserType, processResponse } from '../../component/utilities';
+import { getWallet, getPref, getUserType, processResponse } from '../../component/utilities';
 import color from '../../component/color'
+import { lightTheme } from '../../theme/colors';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
+import SlideUpAlert from '../../component/SlideUpAlert';
+import { font } from '../../constants';
+import { baseUrl, getToken } from '../../utilities';
+import PopUpAlert from '../../component/view/PopUpAlert';
+import MiniCardBalance from '../../component/view/MiniCardBalance';
 
-export default class Transfer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: false,
-            bloading: false,
-            isEnabled: false,
-            pin: false,
-            option: 0,
-            items: [],
-            select_bank: false,
-            add_bank: false,
-            view_banks: false,
-            failed: false,
-            done: false,
-            selected_bank_details: null,
-            bank_list: [],
-            pay_visible: false,
-            view_balance: false,
-            data: '',
-            showBalance: true,
-            balance: 0,
-            auth: '',
-            amount: '',
-            user_id: '',
-            wallet: '',
 
-            bank_name: 'Select Bank',
-            bank_code: '',
-            account_number: '',
-            account_name: '',
-            role: '',
-            payment_detail: null,
-            operation_message: 'An Error Occured Please try again'
-        };
-    }
+const Transfer = () => {
 
-    async componentDidMount() {
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
+
+    const [loading, setLoading] = useState(false);
+    const [bloading, setBLoading] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(false);
+    const [isAddToBeneficiary, setIsAddToBeneficiary] = useState(false);
+    const [pin, setPin] = useState(false);
+    const [option, setOption] = useState(1);
+    const [items, setItems] = useState([]);
+    const [selectBank, setSelectBank] = useState(false);
+    const [addBank, setAddBank] = useState(false);
+    const [viewBanks, setViewBanks] = useState(false);
+    const [failed, setFailed] = useState(false);
+    const [done, setDone] = useState(false);
+    const [selectedBankDetails, setSelectedBankDetails] = useState(null);
+    const [bankList, setBankList] = useState([]);
+    const [payVisible, setPayVisible] = useState(false);
+    const [viewBalance, setViewBalance] = useState(false);
+    const [data, setData] = useState('');
+
+    const [balance, setBalance] = useState(0);
+    const [auth, setAuth] = useState('');
+    const [amount, setAmount] = useState('');
+    const [userId, setUserId] = useState('');
+    const [wallet, setWallet] = useState('');
+    const [bankName, setBankName] = useState('Select Bank');
+    const [bankCode, setBankCode] = useState('');
+    const [accountNumber, setAccountNumber] = useState('');
+    const [accountName, setAccountName] = useState('');
+    const [role, setRole] = useState('');
+    const [paymentDetail, setPaymentDetail] = useState({});
+    const [operationMessage, setOperationMessage] = useState('An Error Occurred. Please try again');
+
+
+    const [alert, setAlert] = useState({ height: 350, type: 1 })
+    const [showAlert, setShowAlert] = useState(false)
+    const [destinationText, setDestinationText] = useState('Select  Destination')
+
+
+    const initiate = async () => {
         const pre = await getPref();
         setTimeout(async () => {
-          if (await getPref() == "Instant") {
-            this.setState({ isEnabled: true })
-          } else {
-            this.setState({ isEnabled: false })
-          }
-        }, 500);
-      }
-    
-      toggleSwitch() {
-        if (this.state.isEnabled) {
-          this.updateWalletPref(null)
-          this.setState({ isEnabled: false })
-        } else {
-          this.updateWalletPref('Instant')
-          this.setState({ isEnabled: true })
-        }
-    
-      }
-    
-
-    async componentWillMount() {
-        const wallet = JSON.parse(await getWallet())
-        this.setState({
-            auth: await getToken(),
-            wallet: wallet,
-            balance: wallet.balance,
-            bank_list: wallet.bank_accounts,
-            role: await getUserType()
-        })
-        if (wallet.bank_accounts.length > 0) {
-            const bank_accounts = wallet.bank_accounts;
-            for (let i = 0; i < bank_accounts.length; i++) {
-                if (!bank_accounts[i].is_virtual_account) {
-                    this.setState({ selected_bank_details: bank_accounts[i] })
-                }
+            if (await getPref() == "Instant") {
+                setIsEnabled(false)
+            } else {
+                setIsEnabled(true)
             }
+        }, 500);
+    }
+
+    const toggleSwitch = () => {
+        if (isEnabled) {
+            updateWalletPref(null)
+            setIsEnabled(false)
+        } else {
+            updateWalletPref('Instant')
+            setIsEnabled(true)
         }
 
     }
 
 
-    setOption(data) {
-        var index = data.value
-        this.setState({
-            option: index,
-        })
+    const loadData = async () => {
+        const wallet = JSON.parse(await getWallet())
+        console.warn(wallet.balance.data.currentBalance);
+
+        setAuth(await getToken())
+        console.warn(await getToken())
+        setWallet(wallet)
+        setRole(await getUserType())
+        setBalance(wallet.balance.data.currentBalance)
+        // this.setState({
+
+        //     wallet: wallet,
+        //     balance: wallet.balance,
+        //     bank_list: wallet.bank_accounts,
+        //     role: await getUserType()
+        // })
+        // if (wallet.bank_accounts.length > 0) {
+        //     const bank_accounts = wallet.bank_accounts;
+        //     for (let i = 0; i < bank_accounts.length; i++) {
+        //         if (!bank_accounts[i].is_virtual_account) {
+        //             this.setState({ selected_bank_details: bank_accounts[i] })
+        //         }
+        //     }
+        // }
+
+    }
+
+
+    useEffect(() => {
+        initiate()
+        loadData()
+    }, []);
+
+
+    const setOptions = (data) => {
+        setShowAlert(false)
+        setDestinationText(data.label)
+        setOption(data.value)
     };
 
-    getWalletRequest() {
-        const { auth } = this.state
-        console.warn(URL.urltwo)
-
-        this.setState({ loading: true });
+    const getWalletRequest = () => {
+        dispatch(SHOW_LOADER("Getting wallet"))
 
         fetch(URL.urltwo + '/wallet', {
             method: 'GET', headers: {
@@ -124,45 +148,45 @@ export default class Transfer extends Component {
             .then(res => {
                 AsyncStorage.setItem('wallet', JSON.stringify(res.data));
 
-                this.setState({
-                    balance: res.data.balance,
-                    ledger_balance: res.data.ledger_balance,
-                    loading: false
-                })
+                setBalance(res.data.balance.data.currentBalance)
+                setPoint(res.data.points)
+                setLedgerBalance(res.data.balance.data.availableBalance)
+                setWallet(res.data)
+
 
             })
             .catch(error => {
                 alert(error.message);
-                this.setState({ loading: false })
+                //hide Loading
             });
 
 
     };
 
-    handleSuccessPin(code) {
-        this.setState({ pin: false })
-        const { option } = this.state
+    const handleSuccessPin = (code) => {
+        console.warn(option)
+        setPin(false)
         if (option == 1) {
-            this.processMyBankTransfer()
+            processMyBankTransfer()
         } else if (option == 2) {
-            this.processIDTransfer(code)
+            processIDTransfer(code)
         } else if (option == 3) {
-            this.processOtherBankTransfer()
+            processOtherBankTransfer()
         }
 
 
     }
 
-    processMyBankTransfer() {
+    const processMyBankTransfer = () => {
         console.warn("my bank")
 
-        const { amount, auth, selected_bank_details } = this.state
+
         if (amount == "") {
             Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
             return
         }
 
-        this.setState({ loading: true })
+        //show loading
 
         const formData = new FormData();
         formData.append('wallet_bank_id', selected_bank_details.id);
@@ -178,34 +202,38 @@ export default class Transfer extends Component {
             .then(res => res.json())
             .then(res => {
                 console.warn(res)
-                this.setState({ loading: false })
+                //hide loader
                 if (res.data.status == 'success') {
-                    this.setState({ done: true, operation_message: res.message })
+                    setDone(true)
+                    setOperationMessage(res.message)
                 } else {
-                    this.setState({ failed: true, operation_message: res.message })
+                    setFailed(true)
+                    setOperationMessage(res.message)
                 }
             })
             .catch((error) => {
                 console.log("Api call error");
                 console.warn(error);
-                this.setState({ loading: false })
-                this.setState({ failed: true, operation_message: 'Something went wrong please try again later' })
+                //hide loader
+                setFailed(true)
+                setOperationMessage('Something went wrong please try again later')
 
             });
     }
 
-    getDetailRequest() {
-        const { user_id, auth, amount } = this.state
+    const getDetailRequest = () => {
 
-        if (user_id == "" || amount == "") {
+        dispatch(SHOW_LOADER("Getting wallet"))
+
+        if (userId == "" || amount == "") {
             Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
             return
         }
 
+        console.warn(userId, amount)
+        //shoe loader
 
-        this.setState({ loading: true });
-
-        fetch(URL.urltwo + '/wallet/holder/' + user_id, {
+        fetch(baseUrl() + '/wallets/holder/' + userId, {
             method: 'GET', headers: {
                 Accept: 'application/json',
                 'Authorization': 'Bearer ' + auth,
@@ -216,30 +244,27 @@ export default class Transfer extends Component {
             .then(res => {
                 const { statusCode, data } = res;
                 console.warn(statusCode, data)
-                this.setState({
-                    loading: false,
-                })
+                //hide loader
                 if (statusCode == 200) {
-                    this.setState({
-                        payment_detail: data.data,
-                        pay_visible: true
-                    })
+                    setPaymentDetail(data.data)
+                    setPayVisible(true)
+
                 } else {
-                    alert("User with this ID does not exit");
+                    Alert.alert("User with this ID does not exit");
                 }
 
 
             })
             .catch(error => {
-                alert(error.message);
-                this.setState({ loading: false })
-            });
+                Alert.alert(error.message);
+                // hide loader
+            }).finally(() => dispatch(HIDE_LOADER())
+            )
     };
 
 
-    processIDTransfer(pin) {
+    const processIDTransfer = (pin) => {
 
-        const { amount, auth, wallet, payment_detail, } = this.state
 
         if (amount == "") {
             Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
@@ -247,21 +272,24 @@ export default class Transfer extends Component {
         } else {
 
         }
-        var action_url = '/wallet/topup'
-        var formData = new FormData();
+        var action_url = '/transfers'
 
-        formData.append('sender_wallet_id', wallet.id);
-        formData.append('recipient_id', payment_detail.id);
-        formData.append('amount', amount);
-        formData.append('transaction_pin', pin);
+        var formData = JSON.stringify({
+            sender_wallet_id: wallet.id,
+            amount: Number(amount),
+            pin: pin,
+            narration: "internal",
+            islocal: true,
+            reciever_wallet_id: paymentDetail.wallet_id,
 
-
-        this.setState({
-            loading: true,
         })
 
-        fetch(URL.urltwo + action_url, {
+        console.error(formData)
+        //show loader
+
+        fetch(baseUrl() + action_url, {
             method: 'POST', headers: {
+                'Content-Type': 'application/json',
                 Accept: 'application/json',
                 'Authorization': 'Bearer ' + auth,
             }, body: formData,
@@ -270,109 +298,100 @@ export default class Transfer extends Component {
             .then(res => {
                 const { statusCode, data } = res;
                 console.warn(statusCode, data);
-                this.setState({
-                    visible: false,
-                    loading: false,
-                })
+
 
                 if (statusCode == 200) {
-                    this.setState({ done: true, operation_message: data.message })
+                    setDone(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 401) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 422) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 412) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else {
-                    this.setState({ failed: true, operation_message: 'Something went wrong please try again later' })
+                    setFailed(true)
+                    setOperationMessage('Something went wrong please try again later')
                 }
 
             })
             .catch((error) => {
                 console.log("Api call error");
                 console.warn(error);
-                this.setState({ loading: false })
-                this.setState({ failed: true, operation_message: 'Something went wrong please try again later' })
-            });
+                //hide loader
+                setFailed(true)
+                setOperationMessage('Something went wrong please try again later')
+            }).finally(() => dispatch(HIDE_LOADER())
+            )
 
     };
 
 
-    selectedBank(v) {
-        this.setState({
-            selected_bank_details: v,
-            select_bank: false
-        })
+    const selectedBank = (v) => {
+        selectedBankDetails(v)
+        setSelectBank(true)
     }
 
-    selBank(v) {
-        this.setState({
-            bank_code: v.bankcode,
-            bank_name: v.bankname,
-            view_banks: false
-        });
+    const selBank = (v) => {
+        console.warn(v);
+        setBankCode(v.bankCode)
+        setBankName(v.name)
+        setViewBanks(false)
     }
 
-    getBeneficiaryProcess(text) {
-
-        const { bank_code, account_number, auth } = this.state
-
-        this.setState({ account_name: '' })
-        if (text.length == 10 && bank_code != "") {
-            this.bRequest(bank_code, text, auth)
-        } else if (text.length == 10 && bank_code == "") {
+    const getBeneficiaryProcess = (text) => {
+        setAccountName('')
+        if (text.length == 10 && bankCode != "") {
+            bRequest(bankCode, text, auth)
+        } else if (text.length == 10 && bankCode == "") {
             Alert.alert('Validation failed', 'Select Bank and enter account number again', [{ text: 'Okay' }])
         }
-
-
-
-
     }
 
-    bRequest(bank_code, account_number_entered, token) {
+    const bRequest = (bank_code, account_number_entered, token) => {
+        console.warn()
+        setBLoading(true)
+        setAccountNumber(account_number_entered)
 
-        this.setState({ bloading: true, account_number: account_number_entered })
-        const formData = new FormData();
-
-        formData.append('bankcode', bank_code);
-        formData.append('accountnumber', account_number_entered);
-        fetch(URL.urltwo + '/ext/banks/beneficiary-details', {
+        const formData = {
+            account_number: account_number_entered,
+            bank_code: bank_code
+        }
+        console.warn(formData)
+        fetch(baseUrl() + '/bank', {
             method: 'POST', headers: {
+                'Content-Type': 'application/json',
                 Accept: 'application/json',
                 'Authorization': 'Bearer ' + token,
-            }, body: formData,
+            }, body: JSON.stringify(formData),
         })
             .then(res => res.json())
             .then(res => {
+                setBLoading(false)
                 console.warn(res);
-                if (res.responsecode == '00') {
-                    this.setState({
-                        bloading: false,
-                        account_name: res.accountname
-                    })
+                // if (res.responsecode == '00') {
+                //     setBLoading(false)
+                //     setAccountName(res.accountname)
 
-                } else {
-                    this.setState({
-                        bloading: false,
-                    })
-                    Alert.alert('Validation failed', 'Select Bank and enter account number again', [{ text: 'Okay' }])
-                }
-
+                // } else {
+                //     setBLoading(false)
+                //     Alert.alert('Validation failed', 'Select Bank and enter account number again', [{ text: 'Okay' }])
+                // }
             })
             .catch((error) => {
                 console.log("Api call error");
                 console.warn(error);
                 alert(error.message);
-                this.setState({ bloading: false })
+                setBLoading(false)
             });
     }
 
 
 
-    processOtherBankTransfer() {
-
-        const { bank_name, amount, auth, bank_code, account_number, account_name, wallet, data } = this.state
-
+    const processOtherBankTransfer = () => {
 
         if (account_number == "" || account_name == "" || bank_code == "" || amount == "") {
             Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
@@ -381,7 +400,7 @@ export default class Transfer extends Component {
 
         }
 
-        this.setState({ loading: true })
+        //show loader
 
         const formData = new FormData();
         formData.append('amount', amount);
@@ -401,119 +420,89 @@ export default class Transfer extends Component {
             .then(res => {
                 const { statusCode, data } = res;
                 console.warn(statusCode, data);
-                this.setState({ loading: false })
+                //hide loader
                 if (statusCode == 200 || statusCode == 201) {
-                    this.setState({ done: true, operation_message: data.message })
+                    setDone(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 401) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 422) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else if (statusCode == 412) {
-                    this.setState({ failed: true, operation_message: data.message })
+                    setFailed(true)
+                    setOperationMessage(data.message)
                 } else {
-                    this.setState({ failed: true, operation_message: 'Something went wrong please try again later' })
+                    setFailed(true)
+                    setOperationMessage('Something went wrong please try again later')
+
                 }
 
             })
             .catch((error) => {
                 alert(error.message);
-                this.setState({ failed: true, operation_message: 'Something went wrong please try again later' })
+                setFailed(true)
+                setOperationMessage('Something went wrong please try again later')
             });
 
     }
 
-    async updateWalletPref(auth) {
-        const { wallet } = this.state
+    const updateWalletPref = async (auth) => {
+
         var Dbody = JSON.stringify({
-          auto_withdrawal: auth,
+            auto_withdrawal: auth,
         });
-        this.setState({ loading: true })
+        //show loader
         fetch(URL.urltwo + '/wallet/' + wallet.id + '/preferences', {
-          method: 'POST', headers: {
-            Accept: 'application/json',
-            'Authorization': 'Bearer ' + await getToken(),
-            'Content-Type': 'application/json',
-          }, body: Dbody,
+            method: 'POST', headers: {
+                Accept: 'application/json',
+                'Authorization': 'Bearer ' + await getToken(),
+                'Content-Type': 'application/json',
+            }, body: Dbody,
         })
-          .then(processResponse)
-          .then(res => {
-            this.setState({ loading: false })
-            const { statusCode, data } = res;
-            console.warn(statusCode, data);
-            if (statusCode == 200) {
-              if (data.error) {
-    
-              } else {
-                Toast.show({
-                    text: 'Wallet Prefrence updated!',
-                    position: 'top',
-                    type: 'success',
-                    buttonText: 'Dismiss',
-                    duration: 1500
-                  });
-                if (data.data.auto_withdrawal == 'Instant') {
-                  AsyncStorage.setItem('wallet_pre',data.data.auto_withdrawal);
-                  this.setState({
-                    isEnabled: true
-                  })
-    
-                } else {
-                    AsyncStorage.setItem('wallet_pre', 'null');
-                  this.setState({
-                    isEnabled: false
-                  })
-                }
-    
-              }
-            }
-    
-          })
-          .catch(error => {
-            alert(error.message);
-            this.setState({ loading: false })
-          });
-    
-    
-      };
+            .then(processResponse)
+            .then(res => {
+                //hide loader
+                const { statusCode, data } = res;
+                console.warn(statusCode, data);
+                if (statusCode == 200) {
+                    if (data.error) {
 
+                    } else {
+                        Toast.show({
+                            text: 'Wallet Prefrence updated!',
+                            position: 'top',
+                            type: 'success',
+                            buttonText: 'Dismiss',
+                            duration: 1500
+                        });
+                        if (data.data.auto_withdrawal == 'Instant') {
+                            AsyncStorage.setItem('wallet_pre', data.data.auto_withdrawal);
+                            setIsEnabled(true)
 
-    render() {
-        return (
-            <>
-                {this.state.view_banks ?
-                    this._Bank()
-                    :
-                    this.state.add_bank ?
-                        this._addBank()
-                        :
-                        <Container style={{ backgroundColor: '#fff' }}>
-                            <Content>
-                                {
-                                    this.state.select_bank ?
-                                        this._selectBank()
-                                        :
-                                        this.state.pin ?
-                                            this._pin()
-                                            :
-                                            this.state.done ?
-                                                this.success()
-                                                :
-                                                this.state.failed ?
-                                                    this.error() :
+                        } else {
+                            AsyncStorage.setItem('wallet_pre', 'null');
+                            setIsEnabled(false)
+                        }
 
-                                                    this._transfer()
-                                }
-                            </Content>
-                            {this._modalView()}
-                            {this.state.loading ? <ActivityIndicator /> : null}
-                        </Container>
+                    }
                 }
 
-            </>
+            })
+            .catch(error => {
+                alert(error.message);
+                // hide loader
+            });
 
-        );
-    }
-    _transfer() {
+
+    };
+
+
+
+
+
+    const _transfer = () => {
         const placeholder = {
             label: 'Select  Destination',
             value: null,
@@ -525,12 +514,12 @@ export default class Transfer extends Component {
                 <View style={styles.body}>
                     <View style={{ height: 20 }}></View>
                     <View style={{ flexDirection: 'row', paddingLeft: 20, width: Dimensions.get('window').width, }}>
-                        <TouchableOpacity onPress={() => this.props.navigation.goBack()} >
+                        <TouchableOpacity onPress={() => navigation.goBack()} >
                             <Icon
                                 name="arrowleft"
                                 size={30}
                                 type='antdesign'
-                                color={color.primary_color}
+                                color={lightTheme.PRIMARY_COLOR}
                             />
                         </TouchableOpacity>
                         <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
@@ -539,68 +528,9 @@ export default class Transfer extends Component {
                         <View style={{ justifyContent: 'center', width: 40, alignItems: 'center' }}></View>
                     </View>
                     <View style={styles.mainbody}>
-                        <View style={styles.card_container}>
-                            <LinearGradient start={{ x: 0.0, y: 0.25 }} end={{ x: 0.5, y: 1.0 }} colors={['#3AA34E', '#005A11']} style={styles.card_body} >
-                                <View style={styles.currency_container}>
-                                    <View style={{ marginLeft: 10, padding: 6, backgroundColor: '#ffffff20', justifyContent: 'center', borderRadius: 40, marginBottom: 5 }}>
-                                        <Icon
-                                            name="currency-ngn"
-                                            type='material-community'
-                                            size={18}
-                                            color={color.white}
-                                        />
-                                    </View>
-                                </View>
-                                <View style={styles.detatails_container}>
-                                    <View style={styles.card_part_one}>
-                                        <Text style={{ color: color.white, fontSize: 12, fontWeight: '200', flex: 1, }}> Naira Wallet</Text>
-                                        {this.state.showBalance ?
-                                            <TouchableOpacity onPress={() => this.setState({ showBalance: false })} style={{ flexDirection: 'row', marginLeft: 30, alignItems: 'center', justifyContent: "center" }} >
-                                                <Icon
-                                                    active
-                                                    name="eye-with-line"
-                                                    type='entypo'
-                                                    color={'#ffffff70'}
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-                                            :
-                                            <TouchableOpacity onPress={() => this.setState({ showBalance: true })} style={{ flexDirection: 'row', marginLeft: 30, alignItems: 'center', justifyContent: "center" }} >
-                                                <Icon
-                                                    active
-                                                    name="eye"
-                                                    type='entypo'
-                                                    color={'#ffffff70'}
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-                                        }
-                                    </View>
-                                    <View style={styles.card_part_two}>
 
-                                        {this.state.showBalance ?
-                                            <Text style={{ fontFamily: 'Poppins-Medium', color: color.white, fontSize: 22, }}>NGN {this.state.balance}</Text>
-                                            :
-                                            <Text style={{ fontFamily: 'Poppins-Medium', color: color.white, fontSize: 22, }}>NGN ****</Text>
-                                        }
+                        <MiniCardBalance balance={balance} />
 
-                                    </View>
-                                    <View style={styles.card_part_three}>
-                                        <View style={{ flex: 1, justifyContent: 'center' }}>
-                                            <Text style={{ color: color.white, fontSize: 11, fontFamily: 'Poppins-Regular', flex: 1, }}>Ledger Balance</Text>
-                                        </View>
-                                        <View style={{ backgroundColor: '#fff', width: 2, marginRight: 10 }} />
-                                        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-                                            {this.state.showBalance ?
-                                                <Text style={{ fontFamily: 'Poppins-SemiBold', color: color.white, fontSize: 11, }}>NGN {this.state.ledger_balance}</Text>
-                                                :
-                                                <Text style={{ fontFamily: 'Poppins-SemiBold', color: color.white, fontSize: 11, }}>NGN *****</Text>
-                                            }
-                                        </View>
-                                    </View>
-                                </View>
-                            </LinearGradient>
-                        </View>
                         <View style={{}}>
                             <View style={styles.textInputContainer}>
                                 <Text style={styles.actionbutton}>From </Text>
@@ -614,24 +544,10 @@ export default class Transfer extends Component {
                                 <Text style={styles.actionbutton}>To </Text>
                                 <View style={styles.input}>
                                     <View style={{ flex: 1, marginLeft: 2, justifyContent: 'center', }}>
-                                        <RNPickerSelect
-                                            placeholder={placeholder}
-                                            placeholderTextColor={'#000'}
-                                            items={[
-                                                { label: 'My Bank Account', value: 1 },
-                                                { label: 'Other Bank Account', value: 3 },
-                                                { label: 'Other sendmonny Wallets', value: 2 },
-                                            ]}
-                                            onValueChange={value => {
-                                                this.setOption({
-                                                    value
-                                                });
-                                            }}
-                                            style={pickerSelectStyles}
-                                            value={this.state.account}
-                                            useNativeAndroidPickerStyle={false}
+                                        <TouchableOpacity onPress={() => setShowAlert(true)}>
+                                            <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{destinationText}</Text>
+                                        </TouchableOpacity>
 
-                                        />
                                     </View>
                                 </View>
                             </View>
@@ -639,7 +555,7 @@ export default class Transfer extends Component {
                                 <Text style={styles.actionbutton}>Amount </Text>
                                 <View style={styles.inputtwo}>
                                     <TextInput
-                                        defaultValue={this.state.amount}
+                                        defaultValue={amount}
                                         placeholder="Enter Amount "
                                         placeholderTextColor='#3E3E3E'
                                         returnKeyType="next"
@@ -648,7 +564,7 @@ export default class Transfer extends Component {
                                         autoCorrect={false}
                                         style={{ flex: 1, fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}
                                         maxLength={10}
-                                        onChangeText={text => this.setState({ amount: text })}
+                                        onChangeText={text => setAmount(text)}
                                     />
                                     <View style={{ width: 60, margin: 4, justifyContent: 'center', backgroundColor: '#D0F4D7', alignItems: 'center' }} >
                                         <Text style={{ fontSize: 12, color: 'green', fontFamily: 'Poppins-SemiBold', }}>NGN </Text>
@@ -657,12 +573,12 @@ export default class Transfer extends Component {
                             </View>
 
                             {
-                                this.state.option == 1 ?
-                                    this._myBankAccount() :
-                                    this.state.option == 2 ?
-                                        this._myBankAccountthree() :
-                                        this.state.option == 3 ?
-                                            this._OtherBankAccountthree() :
+                                option == 1 ?
+                                    _myBankAccount() :
+                                    option == 2 ?
+                                        sendToSMWallet() :
+                                        option == 3 ?
+                                            _OtherBankAccountthree() :
                                             null
                             }
 
@@ -674,134 +590,133 @@ export default class Transfer extends Component {
     }
 
 
-    _selectBank() {
+    const _selectBank = () => {
         return (
             <SelectBank
-                items={this.state.bank_list}
-                onSelect={(v) => this.selectedBank(v)}
-                onClose={() => this.setState({ select_bank: false })}
-                removeBank={(data) => this.setState({ bank_list: data })} />
+                items={bankList}
+                onSelect={(v) => selectedBank(v)}
+                onClose={() => setSelectBank(false)}
+                removeBank={(data) => setBankList(data)} />
         )
     }
 
-    _Bank() {
+    const _Bank = () => {
         return (
             <Bank
-                onSelect={(v) => this.selBank(v)}
-                onClose={() => this.setState({ view_banks: false })}
+                onSelect={(v) => selBank(v)}
+                onClose={() => setViewBanks(false)}
             />
         )
     }
 
-    handAddBank(data) {
+    const handAddBank = (data) => {
 
         if (data.bank_accounts.length > 0) {
-            this.setState({
-                bank_list: data.bank_accounts,
-            })
+
+            setBankList(data.bank_accounts)
             const bank_accounts = data.bank_accounts;
             for (let i = 0; i < bank_accounts.length; i++) {
                 if (!bank_accounts[i].is_virtual_account) {
-                    this.setState({ selected_bank_details: bank_accounts[i] })
+                    setSelectedBankDetails(bank_accounts[i])
                 }
             }
         }
     }
 
-    _addBank() {
+    const _addBank = () => {
         return (
             <AddBank
-                onClose={() => this.setState({ add_bank: false })}
-                onAdd={(data) => this.handAddBank(data)}
+                onClose={() => setAddBank(false)}
+                onAdd={(data) => handAddBank(data)}
             />
         )
     }
 
-    _pin() {
+    const _pin = () => {
         return (
             <Pin
-                onSuccess={(pin) => this.handleSuccessPin(pin)}
-                onFail={() => this.setState({ pin: false })}
-                onClose={() => this.setState({ pin: false })}
+                onSuccess={(pin) => handleSuccessPin(pin)}
+                onFail={() => setPin(false)}
+                onClose={() => setPin(true)}
             />
         );
     }
-    onPress() {
-        this.props.navigation.replace('home')
+    const onPress = () => {
+        navigation.replace('home')
     }
-    success() {
+    const success = () => {
         return (
             <Success
-                onPress={() => this.onPress()}
+                onPress={() => onPress()}
                 name={'Ayobami Ayeni'}
-                message={this.state.operation_message}
+                message={operationMessage}
             />
 
         );
     }
 
-    error() {
+    const error = () => {
         return (
             <Error
-                onPress={() => this.onPress()}
+                onPress={() => onPress()}
                 name={'Ayobami Ayeni'}
-                message={this.state.operation_message} />
+                message={operationMessage} />
         );
     }
 
 
-    _myBankAccount() {
-        const { selected_bank_details } = this.state
+    const _myBankAccount = () => {
+
         return (
             <View style={{ marginTop: 15, marginBottom: 99 }}>
 
 
-                {selected_bank_details !== null ?
-                <>
-                    <View style={[styles.textInputContainer]}>
-                        <View style={[styles.input,{height:80}]}>
-                            <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
-                                <View style={{ justifyContent: 'center', flex: 1, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
-                                    <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selected_bank_details.beneficiary_bank_name} </Text>
-                                    <Text style={{ fontSize: 10, marginTop: 10, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>{selected_bank_details.beneficiary_account_number} </Text>
-                                    <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selected_bank_details.beneficiary_account_name} </Text>
+                {selectedBankDetails !== null ?
+                    <>
+                        <View style={[styles.textInputContainer]}>
+                            <View style={[styles.input, { height: 80 }]}>
+                                <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
+                                    <View style={{ justifyContent: 'center', flex: 1, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
+                                        <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selectedBankDetails.beneficiary_bank_name} </Text>
+                                        <Text style={{ fontSize: 10, marginTop: 10, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>{selectedBankDetails.beneficiary_account_number} </Text>
+                                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selectedBankDetails.beneficiary_account_name} </Text>
+                                    </View>
+                                    <View style={{ justifyContent: 'center', marginRight: 15, }} >
+                                        <Image
+                                            style={{ height: 50, width: 80, resizeMode: 'contain' }}
+                                            source={require('../../assets/bank.png')}
+                                        />
+                                    </View>
+
+
+
                                 </View>
-                                <View style={{ justifyContent: 'center', marginRight: 15, }} >
-                                    <Image
-                                        style={{ height: 50, width: 80, resizeMode: 'contain' }}
-                                        source={require('../../assets/bank.png')}
-                                    />
-                                </View>
-
-
-
                             </View>
                         </View>
-                    </View>
 
-                    <View style={{ justifyContent: 'center', flexDirection: 'row', marginHorizontal: 25 }} >
-              <View style={{ justifyContent: 'center', flex: 2, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
-                <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>Auto Withdraw </Text>
-                <Text style={{ fontSize: 12, marginTop: 5, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>Transfer your money to
-your Bank automatically.</Text>
+                        <View style={{ justifyContent: 'center', flexDirection: 'row', marginHorizontal: 25 }} >
+                            <View style={{ justifyContent: 'center', flex: 2, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
+                                <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>Auto Withdraw </Text>
+                                <Text style={{ fontSize: 12, marginTop: 5, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>Transfer your money to
+                                    your Bank automatically.</Text>
 
-              </View>
-              <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center', }} >
-                <View style={{ backgroundColor:'#D2D1F2', alignItems: 'center', justifyContent: 'center', borderRadius:12 }} >
-                  <Switch
-                    trackColor={{ false: '#D2D1F2', true: '#D2D1F2' }}
-                    thumbColor={this.state.isEnabled ? '#4C46E9' : "#f4f3f4"}
-                    ios_backgroundColor="#3e3e3e"
-                    onValueChange={() => this.toggleSwitch()}
-                    value={this.state.isEnabled}
-                  />
-                </View>
-              </View>
-            </View>
+                            </View>
+                            <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center', }} >
+                                <View style={{ backgroundColor: '#D2D1F2', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }} >
+                                    <Switch
+                                        trackColor={{ false: '#D2D1F2', true: '#D2D1F2' }}
+                                        thumbColor={isEnabled ? '#4C46E9' : "#f4f3f4"}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={() => this.toggleSwitch()}
+                                        value={isEnabled}
+                                    />
+                                </View>
+                            </View>
+                        </View>
                     </>
                     :
                     <View style={{ marginLeft: 20, flexDirection: 'row', marginBottom: 20 }} >
-                        <TouchableOpacity onPress={() => this.setState({ add_bank: true })} style={{ marginLeft: 20, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
+                        <TouchableOpacity onPress={() => setAddBank(true)} style={{ marginLeft: 20, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
                             <Icon
                                 active
                                 name="plus"
@@ -810,7 +725,7 @@ your Bank automatically.</Text>
                                 size={20}
                             />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this.setState({ select_bank: true })} style={{ marginLeft: 30, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
+                        <TouchableOpacity onPress={() => setSelectBank(true)} style={{ marginLeft: 30, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
                             <FontAwesome5
 
                                 name="hand-point-up"
@@ -823,7 +738,7 @@ your Bank automatically.</Text>
                 <Text style={{ marginLeft: 20, marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>₦25 is charged for this Bank transfer. You can only transfer ₦5000 at a time.   </Text>
 
                 <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={[styles.buttonContainer, { marginBottom: 9 }]} block iconLeft>
-                    <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.setState({ pin: true })} >
+                    <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => setPin(true)} >
                         <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Transfer </Text>
                     </TouchableOpacity>
                 </LinearGradient>
@@ -832,7 +747,7 @@ your Bank automatically.</Text>
     }
 
 
-    _myBankAccountthree() {
+    const sendToSMWallet = () => {
         return (
             <View style={{ marginTop: 15, marginBottom: 20 }}>
                 <View style={styles.textInputContainer}>
@@ -847,18 +762,18 @@ your Bank automatically.</Text>
                             autoCorrect={false}
                             style={{ flex: 1, fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}
                             maxLength={10}
-                            onChangeText={text => this.setState({ user_id: text })}
+                            onChangeText={text => setUserId(text)}
                         />
                     </View>
                 </View>
                 <View style={{ marginTop: 15, flexDirection: 'row', marginBottom: 15, }}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('qr', { operation: 'top' })} style={{ marginLeft: 20, flex: 1, height: 65, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
+                    <TouchableOpacity onPress={() => navigation.navigate('qr', { operation: 'top' })} style={{ marginLeft: 20, flex: 1, height: 65, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
                         <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#2D2C71', fontSize: 14 }}> Scan QR code  </Text>
                     </TouchableOpacity>
 
 
                     <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={[styles.buttonContainer, { flex: 1, marginTop: 0 }]} block iconLeft>
-                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.getDetailRequest()} >
+                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => getDetailRequest()} >
                             <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}> Transfer </Text>
                         </TouchableOpacity>
                     </LinearGradient>
@@ -867,13 +782,13 @@ your Bank automatically.</Text>
         )
     }
 
-    _OtherBankAccountthree() {
+    const _OtherBankAccountthree = () => {
         return (<View style={{ marginTop: 15, marginBottom: 20 }}>
             <View style={styles.textInputContainer}>
                 <Text style={styles.actionbutton}>Bank   </Text>
                 <View style={styles.input}>
-                    <TouchableOpacity onPress={() => this.setState({ view_banks: true })} style={{ flex: 1, justifyContent: 'center' }} >
-                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{this.state.bank_name} </Text>
+                    <TouchableOpacity onPress={() => setViewBanks(true)} style={{ flex: 1, justifyContent: 'center' }} >
+                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{bankName} </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -889,7 +804,7 @@ your Bank automatically.</Text>
                         autoCorrect={false}
                         style={{ flex: 1, fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}
                         maxLength={10}
-                        onChangeText={text => this.getBeneficiaryProcess(text)}
+                        onChangeText={text => getBeneficiaryProcess(text)}
 
                     />
                 </View>
@@ -901,15 +816,15 @@ your Bank automatically.</Text>
                 <Text style={styles.actionbutton}>Account Name </Text>
                 <View style={styles.inputt}>
                     <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
-                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{this.state.account_name} </Text>
-                        {this.state.bloading ? <PulseIndicator color={color.slide_color_dark} size={40} /> : null}
+                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{accountName} </Text>
+                        {bloading ? <PulseIndicator color={color.slide_color_dark} size={40} /> : null}
                     </View>
                 </View>
             </View>
             <Text style={{ marginLeft: 20, marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>₦25 is charged for this Bank transfer. You can only transfer ₦5000 at a time.   </Text>
 
             <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={styles.buttonContainer} block iconLeft>
-                <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.processThirdBank()}  >
+                <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => processThirdBank()}  >
                     <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Transfer</Text>
                 </TouchableOpacity>
             </LinearGradient>
@@ -919,98 +834,177 @@ your Bank automatically.</Text>
 
 
 
-    processThirdBank() {
-        if (this.state.bloading) {
+    const processThirdBank = () => {
+        if (bloading) {
             Alert.alert('Validation failed', 'Please wait for bank details to load', [{ text: 'Okay' }])
             return
         }
-        this.setState({ pin: true })
+        setPin(true)
     }
 
 
-    _modalView() {
+
+
+
+    const renderSelectDestination = () => {
+        const body = () => {
+            return (
+                <View style={{ flex: 1 }}>
+                    {destinations.map((item) => (
+                        <View style={{ flexDirection: 'row', borderWidth: 0.5, borderColor: '#BFBFBF', paddingVertical: 25, paddingHorizontal: 20 }}>
+                            <TouchableOpacity onPress={() => setOptions(item)} style={{ flex: 1, }}>
+                                <Text style={{ color: lightTheme.PRIMARY_TEXT_COLOR, fontSize: 14, fontFamily: font.BOLD }}>{item.label}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                    <View style={{ marginBottom: 15, marginTop: 20 }}>
+                    </View>
+                </View>
+            )
+        }
         return (
-            <>
-                <Modal
-                    visible={this.state.pay_visible}
-                >
-                    <ModalContent style={{ width: Dimensions.get('window').width - 80, }}>
-                        <View>
+            <SlideUpAlert
+                title={'Hold on'}
+                height={alert.height}
+                showButton={true}
+                onClose={() => setShowAlert(false)}
+                Body={() => body()} />
+        )
+    }
 
+    const UserIDConfirmation = () => {
+        const header = () => {
+            return (
+                <View style={{ height: 0, }}>
 
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }} >
-                                <View style={styles.avartar}>
-                                    <Avatar
-                                        rounded
-                                        source={require('../../assets/bank.png')}
-                                        size="medium"
-                                        icon={{ name: 'rocket', color: 'orange', type: 'font-awesome' }}
-                                        overlayContainerStyle={{ backgroundColor: 'white', }}
-                                        onPress={() => console.log("Works!")}
-                                        containerStyle={{ borderRadius: 15, }}
-                                    />
+                </View>
+            )
+        }
+
+        const body = () => {
+            return (
+                <View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }} >
+                        <View style={styles.avartar}>
+                            <Avatar
+                                rounded
+                                source={require('../../assets/bank.png')}
+                                size="medium"
+                                icon={{ name: 'rocket', color: 'orange', type: 'font-awesome' }}
+                                overlayContainerStyle={{ backgroundColor: 'white', }}
+                                onPress={() => console.log("Works!")}
+                                containerStyle={{ borderRadius: 15, }}
+                            />
+                        </View>
+
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }} >
+                        {paymentDetail != null ?
+                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 15 }}>
+                                <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 18, textAlign: 'center', paddingBottom: 10, marginTop: 5, }}>{paymentDetail.first_name} {paymentDetail.last_name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                                    <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>Marchant ID:</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-bold', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}> {paymentDetail.user_id}</Text>
                                 </View>
-
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }} >
-                                {this.state.payment_detail != null ?
-                                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 15 }}>
-                                        <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 18, textAlign: 'center', paddingBottom: 10, marginTop: 5, }}>{this.state.payment_detail.first_name} {this.state.payment_detail.last_name}</Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                                            <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>Marchant ID:</Text>
-                                            <Text style={{ fontFamily: 'Montserrat-bold', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}> {this.state.payment_detail.user_id}</Text>
-                                        </View>
-
-                                    </View>
-
-                                    : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 15 }}>
-                                        <Text style={{ fontFamily: 'Montserrat-Bold', color: '#2D2C71', fontSize: 18, textAlign: 'center', paddingBottom: 10, marginTop: 5, }}>Guest</Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                                            <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>Marchant ID:</Text>
-                                            <Text style={{ fontFamily: 'Montserrat-bold', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}> 00000000</Text>
-                                        </View>
-
-                                    </View>}
-
-
-
-
-
                             </View>
 
+                            : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 15 }}>
+                                <Text style={{ fontFamily: 'Montserrat-Bold', color: '#2D2C71', fontSize: 18, textAlign: 'center', paddingBottom: 10, marginTop: 5, }}>Guest</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                                    <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>User ID:</Text>
+                                    <Text style={{ fontFamily: 'Montserrat-bold', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}> 00000000</Text>
+                                </View>
+                            </View>}
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                                <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>Are you sure you want to transfer {this.state.amount} to this User?</Text>
 
-                            </View>
+                    </View>
 
-                            <View style={{ marginTop: 15, flexDirection: 'row', marginBottom: 5, }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                        <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, }}>Are you sure you want to transfer {amount} to this User?</Text>
+                    </View>
 
+                    <View style={{ marginTop: 15, flexDirection: 'row', marginBottom: 5, }}>
+                        <TouchableOpacity onPress={() => [setPin(true), setPayVisible(false)]} style={{ marginLeft: 20, flex: 1, height: 65, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: lightTheme.PRIMARY_COLOR }} >
+                            <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}> Yes </Text>
+                        </TouchableOpacity>
 
+                        <TouchableOpacity onPress={() => setPin(false)}
+                            style={{ marginLeft: 20, flex: 1, height: 65, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFECB4' }} >
+                            <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#FFC107', fontSize: 14 }}> No  </Text>
+                        </TouchableOpacity>
+                    </View>
 
-                                <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']}
-                                    style={{ marginLeft: 20, flex: 1, height: 65, borderRadius: 5, justifyContent: 'center', alignItems: 'center', }} >
-                                    <TouchableOpacity onPress={() => this.setState({ pay_visible: false, pin: true })} >
-                                        <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}> Yes </Text>
-                                    </TouchableOpacity>
-                                </LinearGradient>
-
-                                <TouchableOpacity onPress={() => this.setState({ pay_visible: false })}
-                                    style={{ marginLeft: 20, flex: 1, height: 65, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFECB4' }} >
-                                    <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#FFC107', fontSize: 14 }}> No  </Text>
-                                </TouchableOpacity>
+                    <View style={{ justifyContent: 'center', flexDirection: 'row', marginHorizontal: 5, marginVertical: 15 }} >
+                        <View style={{ justifyContent: 'center', flex: 2, marginRight: 1, alignItems: 'flex-start' }} >
+                            <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: font.SEMI_BOLD }}>Add to Your beneficiary </Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end', justifyContent: 'center', }} >
+                            <View style={{ backgroundColor: '#D2D1F2', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }} >
+                                <Switch
+                                    trackColor={{ false: '#D2D1F2', true: '#D2D1F2' }}
+                                    thumbColor={isAddToBeneficiary ? '#4C46E9' : "#f4f3f4"}
+                                    ios_backgroundColor="#3e3e3e"
+                                    onValueChange={() => setIsAddToBeneficiary(true)}
+                                    value={isAddToBeneficiary}
+                                />
                             </View>
                         </View>
-                    </ModalContent>
-                </Modal>
+                    </View>
 
 
+                </View>
+            )
+        }
+        return <PopUpAlert Header={() => header()} Body={() => body()} height={350} />
 
-            </>
-        );
     }
 
+
+    return (
+        <>
+            {viewBanks ?
+                _Bank()
+                :
+                addBank ?
+                    _addBank()
+                    :
+                    <Container style={{ backgroundColor: '#fff' }}>
+                        <Content>
+                            {
+                                selectBank ?
+                                    _selectBank()
+                                    :
+                                    pin ?
+                                        _pin()
+                                        :
+                                        done ?
+                                            success()
+                                            :
+                                            failed ?
+                                                error() :
+                                                _transfer()
+                            }
+                        </Content>
+                        {showAlert ? renderSelectDestination() : null}
+                        {payVisible ? UserIDConfirmation() : null}
+                    </Container>
+            }
+
+        </>
+
+    );
+
 }
+
+export default Transfer
+
+
+
+const destinations = [
+    { label: 'My Bank Account', value: 1 },
+    { label: 'Other Bank Account', value: 3 },
+    { label: 'Sendmonny Wallets', value: 2 },
+]
 const styles = StyleSheet.create({
     backgroundImage: {
         width: Dimensions.get('window').width,
@@ -1048,7 +1042,6 @@ const styles = StyleSheet.create({
         marginRight: 30
     },
     card_body: {
-        backgroundColor: 'green',
         borderRadius: 10,
         flexDirection: 'row',
     },

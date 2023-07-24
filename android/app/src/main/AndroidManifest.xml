@@ -34,21 +34,6 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
-           <service android:name="io.invertase.firebase.messaging.RNFirebaseMessagingService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-        <service android:name="io.invertase.firebase.messaging.RNFirebaseInstanceIdService">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-            </intent-filter>
-        </service>
-        <service android:name="io.invertase.firebase.messaging.RNFirebaseBackgroundMessagingService" />
-        <meta-data
-        android:name="com.crashlytics.ApiKey"
-        android:value="AIzaSyAU-cgv3aBaieJh-JCBxTxw3wY2VipNEL4" />
     </application>
 
 </manifest>

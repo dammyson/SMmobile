@@ -1,5 +1,5 @@
 // React native and others libraries imports
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, SafeAreaView, AsyncStorage, FlatList, Dimensions, Image, StyleSheet, TouchableOpacity, StatusBar, ImageBackground } from 'react-native';
 import { Container, Content, View, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 import { Card, Icon, SocialIcon } from 'react-native-elements'
@@ -8,31 +8,25 @@ import { PulseIndicator } from 'react-native-indicators';
 import URL from '../../component/server'
 import color from '../../component/color'
 import { getToken, getWallet, processResponse } from '../utilities';
+import { baseUrl } from '../../utilities';
+import { lightTheme } from '../../theme/colors';
 
 
-export default class SelectBank extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      merchant: 'ay345',
-      items: [],
-      visible: false,
-      view_balance: false,
-      loading: false,
-      auth: '',
-      bank_id: '',
-      selected_category: 0,
-    };
-  }
+const SelectBank =(onClose, items_)=> {
+
+  const [merchant, setMerchant] = useState('ay345');
+  const [items, setItems] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [viewBalance, setViewBalance] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [auth, setAuth] = useState('');
+  const [bankId, setBankId] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(0);
 
 
-  async componentWillMount() {
-    this.setState({
-      auth: await getToken(),
-    })
-  }
 
-  removeBank(bank_id) {
+
+ const removeBank=(bank_id)=> {
     Alert.alert(
       'Are you sure to delete?',
       'never recover',
@@ -44,7 +38,7 @@ export default class SelectBank extends Component {
     )
   }
 
-  removeBankRequest(bank_id) {
+  removeBankRequest=(bank_id)=> {
     const { auth } = this.state
     this.setState({ loading: true });
 
@@ -67,9 +61,11 @@ export default class SelectBank extends Component {
 
   }
 
-  getWalletRequest(auth) {
+  const getWalletRequest=(auth)=> {
     const { onClose, removeBank } = this.props;
-    fetch(URL.urltwo + '/wallet', {
+    console.warn(auth);
+
+    fetch(baseUrl() + '/bank', {
       method: 'GET', headers: {
         Accept: 'application/json',
         'Authorization': 'Bearer ' + auth,
@@ -94,9 +90,9 @@ export default class SelectBank extends Component {
 
   };
 
-  render() {
-    const { onClose, items } = this.props;
-    if (this.state.loading) {
+
+
+    if (loading) {
       return (
 
         <ImageBackground
@@ -125,7 +121,7 @@ export default class SelectBank extends Component {
                 name="close"
                 size={30}
                 type='antdesign'
-                color={color.primary_color}
+                color={lightTheme.PRIMARY_COLOR}
               />
             </TouchableOpacity>
             <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
@@ -151,17 +147,17 @@ export default class SelectBank extends Component {
       </View>
 
     );
-  }
+  
 
 
-  _selectBank = (index) => {
+ const  _selectBank = (index) => {
     const { onSelect, } = this.props;
     onSelect(index);
   }
-  renderItem = ({ item, }) => {
+ const renderItem = ({ item, }) => {
     return (
       <View style={styles.textInputContainer}>
-        <TouchableOpacity onPress={() => this._selectBank(item)} style={styles.input}>
+        <TouchableOpacity onPress={() => _selectBank(item)} style={styles.input}>
           <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
             <View style={{ justifyContent: 'center', }} >
               <Icon
@@ -187,10 +183,10 @@ export default class SelectBank extends Component {
     )
 
   }
+
 }
 
-
-SelectBank;
+export default SelectBank;
 
 const styles = StyleSheet.create({
   container: {

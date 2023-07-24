@@ -1,21 +1,21 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-platform :ios, '10.0'
+platform :ios, '11.0'
 
-target 'Paychange' do
+target 'Sendmonny' do
   config = use_native_modules!
 
   use_react_native!(:path => config["reactNativePath"])
-  pod 'Firebase/Auth'
-  pod 'Firebase/Messaging'
+  # pod 'Firebase/Auth'
+  # pod 'Firebase/Messaging'
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
   pod 'RNFS', :path => '../node_modules/react-native-fs'
   permissions_path = '../node_modules/react-native-permissions/ios'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
 
-  target 'PaychangeTests' do
+  target 'SendmonnyTests' do
     inherit! :complete
     # Pods for testing
   end
@@ -24,16 +24,17 @@ target 'Paychange' do
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
   # you should disable these next few lines.
-  use_flipper!
-  post_install do |installer|
-    flipper_post_install(installer)
-  end
+  use_native_modules!
+  # use_flipper!()
+  # post_install do |installer|
+  #   flipper_post_install(installer)
+  # end
 end
 
-target 'Paychange-tvOS' do
+target 'Sendmonny-tvOS' do
   # Pods for Paychange-tvOS
 
-  target 'Paychange-tvOSTests' do
+  target 'Sendmonny-tvOSTests' do
     inherit! :search_paths
     # Pods for testing
   end

@@ -3,40 +3,44 @@ import React, { Component } from 'react';
 import { AsyncStorage, Linking, ImageBackground, StatusBar, TouchableOpacity, Dimensions, StyleSheet, Image } from 'react-native';
 import { Container, Content, View, Text, Button, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 import { Icon, Avatar } from 'react-native-elements'
-import Modal, { ModalContent } from 'react-native-modals';
-import OTPInputView from '@twotalltotems/react-native-otp-input'
-import LinearGradient from 'react-native-linear-gradient';
-import { getFmc ,getChatNumber} from '../../component/utilities';
+import { getFmc, getChatNumber } from '../../component/utilities';
 import color from '../../component/color'
+import { lightTheme } from '../../theme/colors';
 
-export default class Settings extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            items: [],
-            enterCode: true,
-            spinner: false,
-            view_balance: false,
-            visible_log_merchant: false
-        };
-    }
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { font } from '../../constants';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+
+const Settings=()=>{
+   
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
+
+   const  onItemClick = (item) => {
+        if (item.value == "account") {
+        //   setShowAccount(true)
+        } else if (item.value == "privacy") {
+          navigation.navigate('Privacy');
+        } else if (item.value == "logout") {
+            logOut()
+        }
+        else if (item.value == "support") {
+          Linking.openURL("https://www.uis.edu/form/mobile-app-support-form");
+        }
+    
+      }
 
 
-    componentWillMount() {
-
-    }
-
-
-    logOut() {
+   const logOut=()=> {
         try {
-
-            this.setState({ visible_log_merchant: false })
-           AsyncStorage.clear();
+            AsyncStorage.clear();
             setTimeout(() => {
-                this.props.navigation.reset({
+                navigation.reset({
                     index: 0,
                     routes: [{ name: 'Welcome' }],
-                  });
+                });
             }, 500);
 
             return true;
@@ -44,172 +48,135 @@ export default class Settings extends Component {
         catch (exception) {
             return false;
         }
-
-
-
     }
 
 
-    async handlerLongClick() {
-        console.warn(await getFmc());
-        Linking.openURL("whatsapp://send?text=" + "Hi I'm from sendmonny app and I have a problem." + "&phone="+getChatNumber())
-    };
 
-   render() {
+    // async handlerLongClick() {
+    //     console.warn(await getFmc());
+    //     Linking.openURL("whatsapp://send?text=" + "Hi I'm from sendmonny app and I have a problem." + "&phone=" + getChatNumber())
+    // };
+
+  
 
         return (
-            <ImageBackground
-                source={require('../../assets/user_bg.png')}
-                style={styles.backgroundImage}
-                resizeMode="cover"
-            >  
-            <StatusBar barStyle="dark-content" hidden={false} backgroundColor="#4C46E9" />
-                <Container style={{ backgroundColor: 'transparent' }}>
-                    <Content>
-                        <LinearGradient start={{ x: 0.0, y: 0.25 }} end={{ x: 0.5, y: 1.0 }} colors={['#4C46E9', '#272669']}>
+           
+                <View
+                    source={require('../../assets/user_bg.png')}
+                    style={styles.backgroundImage}
+                    resizeMode="cover"
+                >
+                    <StatusBar barStyle="dark-content" hidden={false} backgroundColor="#fffs" />
+                    <Container style={{ backgroundColor: 'transparent' }}>
+                        <Content>
                             <View style={styles.body}>
-                                <Text style={styles.title}>Settings</Text>
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('account') } style={styles.item}>
-                                    <Text style={styles.menu}>Account Setting</Text>
-                                    <Icon active name="user" type='font-awesome' color='#fff' />
-                                </TouchableOpacity>
+                                <View style={{ flex: 1, marginHorizontal: 15, marginBottom:100 }}>
+                                    <View style={{ justifyContent: 'center', alignItems: 'center', }}>
+                                        <Text style={{ color: lightTheme.BLACK_TEXT_COLOR, fontFamily: font.BOLD, fontSize: 16 }}>Settings</Text>
 
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('permission') } style={styles.item}>
-                                    <Text style={styles.menu}>Permission</Text>
-                                    <Icon active name="hand-pointing-up" type='material-community' color='#fff' />
-                                </TouchableOpacity>
+                                    </View>
+                                    {items.map((item) => (<>
+                                        <View style={{ marginVertical: 25 }}>
+                                            <Text style={styles.subTitle}>{item.title}  </Text>
+                                            <View style={{ height: 0.8, backgroundColor: lightTheme.INACTIVE_COLOR, opacity: 0.5 }} />
+                                        </View>
 
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('faq')} style={styles.item}>
-                                    <Text style={styles.menu}>FAQs</Text>
-                                    <Icon active name="question-circle" type='font-awesome' color='#fff'/>
-                                </TouchableOpacity>
 
-                                <TouchableOpacity onPress={() => this.handlerLongClick()} style={styles.item}>
-                                    <Text style={styles.menu}>Chat with us</Text>
-                                    <Icon active name="whatsapp" type='material-community' color='#fff'   />
-                                </TouchableOpacity>
+                                        {item.menu_item.map((menu_item) => (
+                                            <TouchableOpacity onPress={() => onItemClick(menu_item)} style={styles.menuItem}>
 
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('about')} style={styles.item}>
-                                    <Text style={styles.menu}>About</Text>
-                                    <Icon active name="info" type='entypo' color='#fff'/>
-                                </TouchableOpacity>
+                                                <View style={styles.menuTextItme} >
+                                                    <Text style={styles.label}>{menu_item.text} </Text>
+                                                </View>
+                                                <View style={{}} >
+                                                    <Icon
+                                                        name="chevron-small-right"
+                                                        size={30}
+                                                        type='entypo'
+                                                        color={lightTheme.BLACK_TEXT_COLOR}
+                                                    />
+                                                </View>
+                                            </TouchableOpacity>
+                                        ))}
 
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('privacy') } style={styles.item}>
-                                    <Text style={styles.menu}>Privacy Policy</Text>
-                                    <Icon active name="shield-lock" type='material-community' color='#fff'/>
-                                </TouchableOpacity>
+                                    </>
 
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('terms')} style={styles.item}>
-                                    <Text style={styles.menu}>Terms And Conditions</Text>
-                                    <Icon active name="progress-download" type='material-community' color='#fff'/>
-                                </TouchableOpacity>
+                                    ))}
 
-                                <TouchableOpacity onPress={() => this.setState({ visible_log_merchant: true })} style={[styles.item, { marginBottom: 100 }]}>
-                                    <Text style={styles.menu}>Log out</Text>
-                                    <Icon active name="logout-variant" type='material-community' color='#fff' />
-                                </TouchableOpacity>
 
+                                   
+
+                                </View>
+                                <View styles={{height: 100}} />
                             </View>
-
-                        </LinearGradient>
-
-                        <Modal
-                            visible={this.state.view_balance}
-                            overlayBackgroundColor='#fff'
-                            overlayOpacity={0.5}
-                        >
-                            <ModalContent style={styles.modal}>
-                                <View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 1, paddingBottom: 10 }}>
-                                        <Text style={{ fontFamily: 'Montserrat-Bold', fontSize: 17, textAlign: 'left', paddingBottom: 10, marginTop: 25, flex: 1 }}>Enter pin </Text>
-                                        <TouchableOpacity onPress={() => this.setState({ view_balance: false })} style={{ marginLeft: 10, backgroundColor: '#000' }}>
-                                            <Icon
-                                                name="close"
-                                                size={20}
-                                                type='antdesign'
-                                                color="#fff"
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={{ alignItems: 'center', paddingTop: 1, paddingBottom: 10, }}>
-                                        <OTPInputView
-                                            style={{
-                                                width: '70%', height: 70, marginLeft: 30,
-                                                marginRight: 30, justifyContent: 'center', color: '#fff',
-                                            }}
-                                            pinCount={4}
-                                            // code={this.state.code} //You can supply this prop or not. The component will be used as a controlled / uncontrolled component respectively.
-                                            // onCodeChanged = {code => { this.setState({code})}}
-                                            autoFocusOnLoad
-                                            codeInputFieldStyle={styles.underlineStyleBase}
-                                            codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                                            onCodeFilled={(code => {
-                                                this.props.navigation.navigate('addpin') 
-                                            })}
-                                        />
-                                    </View>
-                                    <Button style={styles.modalbuttonContainer} block iconLeft>
-                                        <Text style={{ color: '#fdfdfd', fontWeight: '400' }}>Proceed </Text>
-                                    </Button>
-                                </View>
-                            </ModalContent>
-                        </Modal>
-
-
-                        <Modal
-                            visible={this.state.visible_log_merchant}
-                        >
-                            <ModalContent style={styles.modal}>
-                                <View>
-
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingTop: 1, paddingBottom: 10 }}>
-                                        <TouchableOpacity onPress={() => this.setState({ visible_log_merchant: false })} style={{ marginLeft: 10, backgroundColor: '#000' }}>
-                                            <Icon
-                                                name="close"
-                                                size={20}
-                                                type='antdesign'
-                                                color="#fff"
-                                            />
-                                        </TouchableOpacity>
-
-                                    </View>
-                                    <View style={styles.delavartar}>
-                                        <Avatar
-                                            source={require('../../assets/bank.png')}
-                                            size="large"
-                                            icon={{ name: 'rocket', color: 'orange', type: 'font-awesome' }}
-                                            overlayContainerStyle={{ backgroundColor: 'white', }}
-                                            onPress={() => console.log("Works!")}
-                                            containerStyle={{ borderRadius: 15, }}
-                                        />
-                                    </View>
-
-
-                                    <Text style={{ fontFamily: 'Montserrat-Bold', fontSize: 17, textAlign: 'center', paddingBottom: 10, marginTop: 25, }}>Leaving so soon ?</Text>
-                                    <Text style={{ fontFamily: 'Montserrat-Regular', fontSize: 13, textAlign: 'center', paddingBottom: 10, marginLeft: 10, marginRight: 10, }}>Are you sure you want to log out</Text>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                                        <Button onPress={() => this.logOut()} style={styles.modalbuttonContainer} block iconLeft>
-                                            <Text style={{ color: '#fdfdfd', fontWeight: '400' }}>Yes </Text>
-                                        </Button>
-                                        <Button onPress={() => this.setState({ visible_log_merchant: false })} style={styles.modalTansButtonContainer} block iconLeft>
-                                            <Text style={{ color: color.button_blue, fontWeight: '400' }}>No </Text>
-                                        </Button>
-                                    </View>
-
-                                </View>
-                            </ModalContent>
-                        </Modal>
-
-
-                    </Content>
-                </Container>
-            </ImageBackground>
+                        </Content>
+                    </Container>
+                </View>
         );
     }
 
+export default Settings
 
 
-}
+const items = [
+    {
+        title: 'ACCOUNT',
+        menu_item: [
+            {
+                text: 'Account Settings',
+                value: 'account'
+            },
+            {
+                text: 'Account Verification',
+                value: 'notification'
+            },
+            {
+                text: 'Change Transaction PIN',
+                value: 'logout'
+            },
+            {
+                text: 'Recover PIN',
+                value: 'delet'
+            }
+        ]
+    },
+
+    {
+        title: 'SUPPORT',
+        menu_item: [
+            {
+                text: 'FAQs',
+                value: 'account'
+            },
+            {
+                text: 'Chat with us',
+                value: 'notification'
+            }
+        ]
+    },
+    {
+        title: 'OTHERS',
+        menu_item: [
+            {
+                text: 'About us',
+                value: 'about-us'
+            },
+            {
+                text: 'Permission',
+                value: 'permission'
+            },
+            {
+                text: 'Privacy Policy',
+                value: 'policy'
+            },
+            {
+                text: 'Logout',
+                value: 'logout'
+            }
+        ]
+    }
+]
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -217,134 +184,48 @@ const styles = StyleSheet.create({
         alignItems: 'center',
 
     },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    },
-    textInput: {
-        padding: 0,
-        margin: 0,
-        flex: 1,
-        fontSize: 20,
-        color: 'red'
-    },
     backgroundImage: {
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height,
+        backgroundColor: '#fff'
     },
 
-    item: {
-        flexDirection: 'row',
-        marginLeft: 30,
-        marginRight: 30,
-        marginTop: 30,
-        borderRadius: 10,
-        borderColor: '#e3e3e3',
-        alignItems: 'center',
-        paddingRight: 15
-    },
-    mainContent: {
-        flex: 1,
-        justifyContent: 'center'
-
-    },
-    sideContent: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-
-    },
     body: {
         flex: 1,
+        backgroundColor: '#fff'
     },
-    menu: {
-        flex: 1,
-        marginTop: 12,
-        marginBottom: 12,
-        marginRight: 13,
-        marginLeft: 13,
+    subTitle: {
         fontSize: 12,
-        color: '#fff',
-        textAlign: 'left',
-        fontFamily: 'Montserrat-Bold'
+        color: lightTheme.PRIMARY_INACTIVE_COLOR,
+        opacity: 0.5,
+        fontFamily: font.BOLD,
+        marginBottom: 10,
     },
-    title: {
+
+    label: {
+        fontSize: 12,
+        color: lightTheme.BLACK_TEXT_COLOR,
+        fontFamily: font.SEMI_BOLD,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        marginHorizontal: 15,
+        paddingBottom: 10,
+        marginVertical: 5,
+        alignItems: 'center'
+    },
+    menuTextItme: {
         flex: 1,
-        marginTop: 40,
-        marginRight: 30,
-        marginLeft: 30,
-        fontSize: 16,
-        color: '#fff',
-        textAlign: 'left',
-        fontFamily: 'Montserrat-Medium'
-    },
-    modal: {
-        width: Dimensions.get('window').width - 60,
+        marginLeft: 5,
 
     },
-    modalbuttonContainer: {
-        backgroundColor: color.slide_color_dark,
-        marginLeft: 10,
-        marginRight: 10,
-        borderRadius: 15,
-        marginTop: 15,
-        marginBottom: 30,
-    },
-    borderStyleBase: {
-        width: 30,
-        height: 45
-    },
-
-    borderStyleHighLighted: {
-        borderColor: "red",
-    },
-    underlineStyleBase: {
-        width: 30,
-        height: 45,
-        borderWidth: 0,
-        borderBottomWidth: 2,
-        borderColor: "#707070",
-        color: 'blue'
-    },
-
-    underlineStyleHighLighted: {
-        borderColor: "green",
+    name: {
+        fontSize: 12,
+        color: lightTheme.PRIMARY_COLOR,
+        fontFamily: font.REGULAR,
+        marginBottom: 10,
     },
 
 
-    modal: {
-        width: Dimensions.get('window').width - 60,
-
-    },
-    modalbuttonContainer: {
-        backgroundColor: color.slide_color_dark,
-        marginLeft: 10,
-        marginRight: 10,
-        borderRadius: 15,
-        marginTop: 15,
-        marginBottom: 30,
-        flex: 1
-    },
-    modalTansButtonContainer: {
-        borderColor: color.button_blue,
-        borderWidth: 1,
-        marginLeft: 10,
-        marginRight: 10,
-        borderRadius: 15,
-        marginTop: 15,
-        marginBottom: 30,
-        backgroundColor: 'transparent',
-        flex: 1
-    },
-
-    borderStyleHighLighted: {
-        borderColor: "red",
-    },
-    delavartar: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: 10,
-    },
 });
 

@@ -6,7 +6,7 @@
 	<string>development</string>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)ng.paychange</string>
+		<string>$(AppIdentifierPrefix)com.sendmonny</string>
 	</array>
 </dict>
 </plist>

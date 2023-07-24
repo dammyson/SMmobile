@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { StatusBar, BackHandler, StyleSheet,Clipboard, AsyncStorage,  TouchableOpacity, View, Text, Image, Dimensions, ImageBackground } from 'react-native';
-import firebase from 'react-native-firebase'
+import messaging from '@react-native-firebase/messaging';
 import { Toast} from 'native-base';
 export default class Splash extends Component {
   constructor(props) 
@@ -15,6 +15,7 @@ export default class Splash extends Component {
   }
 
   async componentDidMount() {
+    console.warn(new Date())
     this.checkPermission();  
     setTimeout(() => {
       this.initPage();
@@ -46,13 +47,15 @@ export default class Splash extends Component {
 
    //1
 async checkPermission() {
-  const enabled = await firebase.messaging().hasPermission();
-  if (enabled) {
-      this.getToken();
+  const enabled = await messaging().hasPermission();
+  if (enabled == 1) {
+    console.warn('enabled');
+    this.getToken();
   } else {
-      this.requestPermission();
+    console.warn('not enabled');
+    this.requestUserPermission();
   }
- // firebase.messaging().subscribeToTopic("global");
+
 }
 async getToken() {
   let fcmToken = await AsyncStorage.getItem('FBToken');
@@ -60,7 +63,7 @@ async getToken() {
   console.log(fcmToken);
   this.setState({token: fcmToken})
   if (!fcmToken) {
-      fcmToken = await firebase.messaging().getToken();
+      fcmToken = await messaging().getToken();
       console.log(fcmToken);
       console.warn(fcmToken);
       if (fcmToken) {
@@ -71,16 +74,16 @@ async getToken() {
   }
 }
 
-  //2
-async requestPermission() {
-  try {
-      await firebase.messaging().requestPermission();
-      // User has authorised
-      this.getToken();
-  } catch (error) {
-      // User has rejected permissions
-      console.log('permission rejected');
+async requestUserPermission() {
+  const authStatus = await messaging().requestPermission();
+  const enabled =
+    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  if (enabled) {
+    this.getToken()
+    console.log('Authorization status:', authStatus);
   }
+
 }
 
 

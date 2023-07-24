@@ -12,9 +12,12 @@ import QRCode from 'react-native-qrcode-svg';
 import { baseUrl, getToken, storeWallet } from '../../utilities';
 
 import color from '../../component/color'
+import { connect } from 'react-redux';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { lightTheme } from '../../theme/colors';
 
-
-export default class UserTop extends Component {
+class UserTop extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -48,7 +51,7 @@ export default class UserTop extends Component {
     getWalletRequest() {
         const { auth } = this.state
        
-        this.setState({ loading: true });
+      this.props.showLoading()
         fetch(baseUrl() + '/wallets', {
             method: 'GET', headers: {
                 Accept: 'application/json',
@@ -60,48 +63,32 @@ export default class UserTop extends Component {
             .then(res => {
                 console.warn(res)
                 storeWallet( JSON.stringify(res.data))
-
+                this.props.hidLeoading()
 
                 this.setState({
                     balance: res.data.balance.data.currentBalance,
                     ledger_balance: res.data.balance.data.availableBalance,
-                    loading: false,
+                   
                    
                 })
 
             })
             .catch(error => {
                 alert(error.message);
-                this.setState({ loading: false })
+                this.props.hidLeoading()
             });
 
 
     };
 
     render() {
-        if (this.state.loading) {
-            return (
-
-                <ImageBackground
-                    source={require('../../assets/user_bg.png')}
-                    style={styles.loadingBackgroundImage}
-                    resizeMode="cover"
-                >
-                    <StatusBar barStyle="dark-content" hidden={false} backgroundColor="transparent" />
-                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                        <View style={styles.welcome}>
-                            <PulseIndicator color={color.slide_color_dark} size={70} />
-                        </View>
-                    </View>
-                </ImageBackground>
-            );
-        }
         return (
             <ImageBackground
                 source={require('../../assets/wallet_bg.png')}
                 style={styles.backgroundImage}
                 resizeMode="cover">
                 <StatusBar barStyle="dark-content" hidden={false} backgroundColor="transparent" />
+                <SafeAreaView style={{ flex: 1,  backgroundColor: lightTheme.WHITE_COLOR }}>
                 <View style={styles.body}>
                     <View style={{ height: 20 }}></View>
                     <View style={{ flexDirection: 'row', paddingLeft: 20, width: Dimensions.get('window').width, }}>
@@ -224,12 +211,24 @@ export default class UserTop extends Component {
 
 
 
-
+</SafeAreaView>
             </ImageBackground>
         );
     }
 
 }
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        showLoading: () => dispatch(SHOW_LOADER("Getting details")),
+        hidLeoading: () => dispatch(HIDE_LOADER())
+    }
+};
+export default connect(null, mapDispatchToProps)(UserTop)
+
+
+
+
 const styles = StyleSheet.create({
     backgroundImage: {
         width: Dimensions.get('window').width,

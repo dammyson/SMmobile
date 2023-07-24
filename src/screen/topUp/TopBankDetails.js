@@ -3,18 +3,17 @@ import React, { Component } from 'react';
 import { Alert, StatusBar, ImageBackground, TextInput, Dimensions, StyleSheet,Clipboard, TouchableOpacity, AsyncStorage } from 'react-native';
 import { View, Text, Button, Toast} from 'native-base';
 import { Avatar, Badge, Card, Icon, SocialIcon } from 'react-native-elements';
-import Modal, { ModalContent } from 'react-native-modals';
-import OTPInputView from '@twotalltotems/react-native-otp-input'
-import LinearGradient from 'react-native-linear-gradient';
-import URL from '../../component/server'
+
 import { PulseIndicator } from 'react-native-indicators';
 import QRCode from 'react-native-qrcode-svg';
 import { getToken, getWallet, processResponse } from '../../utilities';
 
 import color from '../../component/color'
 
+import { connect } from 'react-redux';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
 
-export default class TopBankDetails extends Component {
+class TopBankDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -36,6 +35,7 @@ export default class TopBankDetails extends Component {
         const bank_account = JSON.parse(await getWallet())
         console.warn(bank_account);
         this.setState({ details: bank_account})
+      
 
        
 
@@ -73,7 +73,7 @@ export default class TopBankDetails extends Component {
                 resizeMode="cover">
                 <StatusBar barStyle="dark-content" hidden={false} backgroundColor="transparent" />
                 <View style={styles.body}>
-                    <View style={{ height: 20 }}></View>
+                    <View style={{ height: 40 }}></View>
                     <View style={{ flexDirection: 'row', paddingLeft: 20, width: Dimensions.get('window').width, }}>
                         <TouchableOpacity onPress={() => this.props.navigation.goBack()} >
                             <Icon
@@ -159,6 +159,19 @@ unique for your top up payment.</Text>
 
     };
 }
+
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        showLoading: () => dispatch(SHOW_LOADER("Login in")),
+        hidLeoading: () => dispatch(SHOW_LOADER("Login in"))
+    }
+};
+export default connect(null, mapDispatchToProps)(TopBankDetails)
+
+
+
+
 const styles = StyleSheet.create({
     backgroundImage: {
         width: Dimensions.get('window').width,

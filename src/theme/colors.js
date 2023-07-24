@@ -1,9 +1,10 @@
 export const lightTheme = {
   mode: 'light',
-  PRIMARY_BACKGROUND_COLOR: '#F5F5F5',
-  PRIMARY_COLOR: '#F81028',
+  PRIMARY_BACKGROUND_COLOR: '#f1f1f1',
+  PRIMARY_COLOR: '#1f58e4',
   PRIMARY_LIGHT_COLOR: '#C02DBF',
-  PRIMARY_INACTIVE_COLOR: '#A3A3A3',
+  PRIMARY_INACTIVE_COLOR: '#767676',
+  INACTIVE_COLOR: '#BFBFBF',
   BACKGROUND_COLOR: '#FFFFFF',
   SECOND_TEXT_COLOR: '#5cb85d',
   INPUT_BORDER_COLOR: '#8F92A1',
@@ -47,3 +48,24 @@ export const lightTheme = {
   WHITE_COLOR:'#ffffff'
 };
 //#DAD5FA
+
+
+const colors = {
+  primary_color: '#FBC02F',
+  button_blue: '#0f0e43',
+  deep_blue: '#0300ad',
+  light_blue: '#4c46e9',
+  slide_color_dark: '#EAAD05',
+  secondary_color: '#282977',
+  disable_color: '#534BAE',
+  text_color: '#455A64',
+  white: '#FFFFFF',
+  black: '#000',
+  grey:'#EFF2F5',
+  red:'red',
+  btc_primary:'#F7931A',
+  btc_bg:'#F7931A30',
+  pm_primary:'#D9241A',
+  uc_primary:'#2775CA',
+  et_primary:'#000000',
+}

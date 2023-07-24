@@ -4,7 +4,9 @@ import { Alert, ImageBackground, TextInput, Dimensions, StyleSheet, AsyncStorage
 import { Container, Content, View, Text, Icon, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 
 import color from '../../component/color'
-
+import { lightTheme } from '../../theme/colors';
+import { auth_logo } from '../../assets';
+import { font } from '../../constants';
 
 export default class Welcome extends Component {
   constructor(props) {
@@ -21,51 +23,48 @@ export default class Welcome extends Component {
 
   render() {
     return (
-      <Container style={{ backgroundColor: 'transparent' }}>
-        <Content>
+      <ImageBackground
+      source={require('../../assets/welcome.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
           <View style={styles.body}>
             <View style={styles.mainContent}>
-              <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom:15, marginTop:15  }}>
-                <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>Register As…</Text>
-              </View>
-              <TouchableOpacity onPress={() => this.itemClicked('CUSTOMER')} style={{ flexDirection: 'row', backgroundColor: '#FFECB4', padding: 20, marginRight: 30, marginLeft: 30, borderRadius: 5 }}>
-                <View style={{ justifyContent: 'center', alignItems:'flex-start', flex: 1 }}>
-                  <Text style={{ color: '#FFC107', fontFamily: 'Poppins-Bold', fontSize: 16 }}>Customer</Text>
-                  <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-Medium', fontSize: 12 }}>For Personal Use</Text>
-                </View>
-                <View style={{}}>
+
+              <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+
+                <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 30 }}>
                   <Image
-                    style={{ width: 100, height: 100 }}
-                    source={require('../../assets/human_phone.png')}
+                    style={styles.logo}
+                    source={auth_logo}
                   />
                 </View>
-              </TouchableOpacity>
-              <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom:10, marginTop:10 }}>
-                <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>Or</Text>
-              </View>
-              <TouchableOpacity onPress={() => this.itemClicked('MERCHANT')}  style={{ flexDirection: 'row', backgroundColor: '#D5D4E2', padding: 20, marginRight: 30, marginLeft: 30, borderRadius: 5 }}>
-                <View style={{ justifyContent: 'center', alignItems:'flex-start', flex: 1 }}>
-                  <Text style={{ color: '#2D2C71', fontFamily: 'Poppins-Bold', fontSize: 16 }}>Merchant </Text>
-                  <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-Medium', fontSize: 12 }}>For Business Use </Text>
+                <View style={{ justifyContent: 'center', alignItems: 'center', }}>
+                  <Text style={{ color: lightTheme.WHITE_COLOR, fontFamily: font.BOLD, fontSize: 26 }}>Welcome to Sendmonny</Text>
+                  <Text style={{ color: lightTheme.WHITE_COLOR, fontFamily: font.MEDIUM, fontSize: 12, marginTop:15, marginHorizontal:20, textAlign:'center' }}>We bridge the gap between merchants and customers, revolutionizing payment experiences by simplifying the process and enhancing speed. </Text>
                 </View>
-                <View style={{}}>
-                  <Image
-                    style={{ width: 100, height: 100 }}
-                    resizeMode='contain'
-                    source={require('../../assets/house_human.png')}
-                  />
-                </View>
-              </TouchableOpacity>
-              <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom:5, marginTop:15 }}>
-                <Text style={{ color: '#0F0E4340', fontFamily: 'Poppins-Regular', fontSize: 14 }}>Already Have and Account</Text>
+
               </View>
-              <TouchableOpacity onPress={() => this.props.navigation.navigate('login')}  style={{ justifyContent: 'center', alignItems: 'center', marginBottom:15, marginTop:1 }}>
-                <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14, textDecorationLine: 'underline', }}>Login</Text>
+
+              <TouchableOpacity style={styles.buttonContainer} onPress={() => this.itemClicked("Customer")}  >
+                <Text style={{ fontFamily: 'Poppins-SemiBold', color:  lightTheme.PRIMARY_COLOR, fontSize: 14 }}>Sign up</Text>
               </TouchableOpacity>
+
+
+              <View style={{ marginLeft: 20, marginRight: 20, justifyContent: 'center', alignItems: 'center' , marginBottom:20}}>
+
+                <Text style={{ color:  lightTheme.WHITE_COLOR, fontFamily: 'Poppins-Medium', fontSize: 12, marginBottom: 7, marginTop: 7 }}>Don't you have an accoount   </Text>
+
+                <TouchableOpacity onPress={() =>  this.props.navigation.navigate('login')}  style={{ alignItems: 'center' }}>
+                  <Text style={{ color: lightTheme.WHITE_COLOR, fontFamily: font.BOLD, fontSize: 14, marginBottom: 7, marginTop: 7 }}>Log in   </Text>
+                </TouchableOpacity>
+              </View>
             </View>
+
+
           </View>
-        </Content>
-      </Container>
+      </ImageBackground>
+
     );
   }
   itemClicked(type) {
@@ -104,12 +103,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
 
   },
+  logo: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    resizeMode: 'contain'
+  },
   body: {
     flex: 1,
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
-    backgroundColor: '#fff'
 
+
+  },
+
+  buttonContainer: {
+    height: 55,
+    marginLeft: 20,
+    marginRight: 20,
+    marginTop: 10,
+    borderRadius: 20,
+    marginBottom: 10,
+    backgroundColor: lightTheme.WHITE_COLOR,
+    justifyContent: 'center', alignItems: 'center',
   },
 
 });

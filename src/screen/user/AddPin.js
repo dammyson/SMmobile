@@ -7,10 +7,15 @@ import { Icon } from 'react-native-elements';
 import LinearGradient from 'react-native-linear-gradient';
 import { processResponse } from '../../component/utilities';
 import ActivityIndicator from '../../component/view/ActivityIndicator'
-import ResetPinOne from '../../component/view/ResetPin_First'
-import ResetPinTwo from '../../component/view/ResetPin_Second'
+import ResetPinOne from '../../component/view/ResetPinFirst'
+import ResetPinTwo from '../../component/view/ResetPinSecond'
 import { baseUrl, getToken } from '../../utilities';
-export default class AddPin extends Component {
+
+import { connect } from 'react-redux';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
+import { lightTheme } from '../../theme/colors';
+
+class AddPin extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -19,7 +24,6 @@ export default class AddPin extends Component {
       type: "",
       pin: "",
       pin_confirmation: '',
-      loading: false,
       confirm: false,
       done: false,
     };
@@ -46,7 +50,6 @@ export default class AddPin extends Component {
 
 
   addPinRequest(pin_confirmation) {
-
     const { pin, auth, } = this.state
     if (pin == "" || pin_confirmation == "") {
       Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
@@ -59,15 +62,13 @@ export default class AddPin extends Component {
       }
     }
 
-    this.setState({ loading: true })
-
-
     let formData = JSON.stringify({
       pin: pin,
       pin_confirmation: pin_confirmation,
-      })
+    })
 
-    this.setState({ loading: true })
+
+    this.props.showLoading()
 
     fetch(baseUrl() + '/transaction-pin/create', {
       method: 'POST', headers: {
@@ -78,63 +79,68 @@ export default class AddPin extends Component {
     })
       .then(processResponse)
       .then(res => {
-        this.setState({ loading: false })
+        this.props.hidLoading()
         const { statusCode, data } = res;
-        console.warn(statusCode, data );
+       
         if (statusCode === 201) {
-          this.setState({ confirm: false, done: true })
-          AsyncStorage.setItem('step', 'three');
+          console.warn(statusCode, data, "THISSS");
+          this.setState({ done: true,  confirm: false })
+          AsyncStorage.setItem('step', 'c');
         } else {
           this.setState({ confirm: false })
           Alert.alert('Operation failed', 'Please check your phone network and retry', [{ text: 'Okay' }])
         }
-
       })
       .catch((error) => {
         console.log("Api call error");
         console.warn(error);
         alert(error.message);
-        this.setState({ loading: false })
+        this.props.hidLoading()
       });
 
   }
 
 
-  firstPin(data){
-    this.setState({pin: data,confirm: true })
+  firstPin(data) {
+    this.setState({ pin: data, confirm: true })
   }
-  seconePin(data){
+  seconePin(data) {
     this.addPinRequest(data)
   }
 
   render() {
-      return (
-      <Container style={{ backgroundColor: 'transparent' }}>
-        <Content>
-         {this.state.confirm ?
-         this.renderConfirm()
-         : this.state.done ?
-           this.renderDone()
-         : this.renderBody() 
-        }
-        </Content>
-        {this.state.loading ? <ActivityIndicator /> : null}
-      </Container>
+    return (
+      <ImageBackground
+        source={require('../../assets/primary.png')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <Container style={{ backgroundColor: 'transparent' }}>
+          <Content>
+            {this.state.confirm ?
+              this.renderConfirm()
+              : this.state.done ?
+                this.renderDone()
+                : this.renderBody()
+            }
+          </Content>
+        </Container>
+      </ImageBackground>
 
     );
   }
 
   renderBody() {
-    return(  <ResetPinOne  OnComplete={(data)=> this.firstPin(data)} />
-)
+    return (<ResetPinOne OnComplete={(data) => this.firstPin(data)} />
+    )
   }
 
   renderConfirm() {
-    return(  <ResetPinTwo OnClose={()=> this.setState({confirm:false})}  OnComplete={(data)=> this.seconePin(data)} />)
+    return (<ResetPinTwo OnClose={() => this.setState({ confirm: false })} OnComplete={(data) => this.seconePin(data)} />)
   }
 
   renderDone() {
-    return( <View style={styles.body}>
+    return (<View style={styles.body}>
       <View style={{ justifyContent: 'center', flex: 1 }}>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25 }}>
           <Image
@@ -143,23 +149,36 @@ export default class AddPin extends Component {
             source={require('../../assets/correct.png')} />
         </View>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25 }}>
-          <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>Transaction  Pin </Text>
-          <Text style={{ color: '#2E2E2E', fontFamily: 'Poppins-Light', fontSize: 12 }}>Your Number has been Created  </Text>
+          <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>All Set </Text>
+          <Text style={{ color: '#2E2E2E', fontFamily: 'Poppins-Light', fontSize: 12 }}>You are all set to explore Sendmonny now.</Text>
         </View>
 
-        <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={styles.buttonContainer} block iconLeft>
-          <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() =>  this.props.navigation.replace('home')}  >
+        <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={[lightTheme.PRIMARY_COLOR, lightTheme.PRIMARY_COLOR]} style={styles.buttonContainer} block iconLeft>
+          <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.props.navigation.replace('home')}  >
             <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Next</Text>
           </TouchableOpacity>
         </LinearGradient>
       </View>
 
     </View>
-)
+    )
   }
 
 
 }
+
+
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    showLoading: () => dispatch(SHOW_LOADER("Setting pin")),
+    hidLoading: () => dispatch(HIDE_LOADER())
+  }
+};
+export default connect(null, mapDispatchToProps)(AddPin)
+
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

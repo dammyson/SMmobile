@@ -15,7 +15,8 @@ import ActivityIndicator from '../../component/view/ActivityIndicator';
 import Complete from '../../component/view/Complete';
 import { baseUrl, getToken, getUser, getWallet, storeWallet } from '../../utilities';
 
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { lightTheme } from '../../theme/colors';
 
 
 export default class Wallet extends Component {
@@ -71,6 +72,7 @@ export default class Wallet extends Component {
             .then(res => res.json())
             .then(res => {
                 this.setState({ loading: false })
+                console.warn(res.data);
                 storeWallet(JSON.stringify(res.data))
                 // AsyncStorage.setItem('wallet', JSON.stringify(res.data));
                 // if (res.data.preferences == null || res.data.preferences == 'null' || res.data.preferences == '') {
@@ -171,12 +173,10 @@ export default class Wallet extends Component {
         }
         return (
             <>
+             <SafeAreaView style={{ flex: 1,  backgroundColor: lightTheme.WHITE_COLOR }}>
                 <View style={styles.backgroundImage}>
-                    <StatusBar barStyle="dark-content" hidden={false} backgroundColor="#fff" />
+                    <StatusBar barStyle="dark-content" hidden={false} backgroundColor={lightTheme.WHITE_COLOR} />
                     <View style={styles.body}>
-                        <View style={{ height: 20 }}>
-
-                        </View>
                         <View style={styles.avarterContainer}>
 
                             <View style={{ flexDirection: 'row', }}>
@@ -278,6 +278,7 @@ export default class Wallet extends Component {
                     </View>
                 </View>
                 {this.state.visible ? this.renderComplete() : null}
+                </SafeAreaView>
             </>
         );
     }
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
     body: {
         flex: 1,
         width: Dimensions.get('window').width,
-        backgroundColor: '#fff'
+        backgroundColor: lightTheme.WHITE_COLOR
     },
     avarterContainer: {
         paddingTop: 20,

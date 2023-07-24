@@ -1,114 +1,81 @@
 
 // React native and others libraries imports
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, ImageBackground, View, ScrollView, Dimensions, StyleSheet, TouchableOpacity, Image, AsyncStorage, StatusBar } from 'react-native';
 import { Container, Content, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 import { Card, Icon, SocialIcon } from 'react-native-elements'
-import Swiper from 'react-native-swiper'
-import {
-    LineChart,
-} from "react-native-chart-kit";
-import URL from '../../component/server'
-import { PulseIndicator } from 'react-native-indicators';
-import LinearGradient from 'react-native-linear-gradient';
 import color from '../../component/color'
 import Moment from 'moment';
-import { getType } from '../../component/utilities';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import ActivityIndicator from '../../component/view/ActivityIndicator';
+import moment from "moment";
+
 import { baseUrl, getToken, getUser, getWallet } from '../../utilities';
+import TransactionItem from './TransactionItem';
+import { lightTheme } from '../../theme/colors';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
+import SlideUpAlert from '../../component/SlideUpAlert';
+import { font } from '../../constants';
+import RadioButton from '../../component/RadioButton';
+
+Moment.locale('en');
+
 
 // in Expo - swipe left to see the following styling, or create your own
-const chartConfig = {
-    backgroundColor: '#FFF',
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
-    color: (opacity = 1) => `#000`,
-    style: {
-        borderRadius: 10
-    }
-};
 
-const data = {
-    labels: ["Sun", "Mon", "Tue", "wed", "Thu", "Fri", "Sat"],
-    datasets: [
-        {
-            data: [20, 45, 28, 80, 99, 43, 53],
-            color: (opacity = 1) => `rgba(251, 192, 47, ${opacity})`, // optional
-            strokeWidth: 5 // optional
-        }
-    ],
-};
+const Transaction = () => {
 
-const graphStyle = {
-    marginVertical: 2,
-};
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
 
-export default class Transaction extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            items: [],
-            activeIndex: 1,
-            loading: true,
-            data: '',
-            auth: '',
-            wallet: '',
-            show_menu: true,
-            show_graph: true,
-            show_graph_line: false,
-            credit_items: [],
-            cr_amount: 0,
-            dr_amount: 0,
-            debit_items: [],
 
-        };
+    const [loading, setLoading] = useState(false)
+    const [items, setItems] = useState([])
+    const [wallet, setWallet] = useState({})
+    const [showAlert, setShowAlert] = useState(false)
+    const [alert, setAlert] = useState({ height: 350, type: 1 })
+
+
+    useEffect(() => {
+        setWalletValue()
+        getWalletTransactionRequest()
+    }, []);
+
+
+
+    const setWalletValue = async () => {
+        setWallet(JSON.parse(await getWallet()))
     }
 
-
-  async  componentDidMount() {
-
-    this.setState({ 
-        wallet: JSON.parse(await getWallet()),  
-        data: JSON.parse(await getUser()),  
-        auth: await getToken()
-      })
-    
-     
-        this.getWalletTransactionRequest()
-     
-    }
-
-
-
-    getWalletTransactionRequest() {
-        const { auth, wallet } = this.state
-        this.setState({ loading: true });
-
+    const getWalletTransactionRequest = async () => {
+        //  dispatch(SHOW_LOADER("Get Tentative"))
         fetch(baseUrl() + '/transactions/', {
             method: 'GET', headers: {
                 Accept: 'application/json',
-                'Authorization': 'Bearer ' + auth,
+                'Authorization': 'Bearer ' + await getToken(),
                 'Content-Type': 'application/json',
             }
         })
-            .then(this.processResponse)
+            .then(processResponse)
             .then(res => {
-                
                 const { statusCode, data } = res;
-                console.warn(data)
                 if (statusCode == 200) {
-                   // this.sortTransactions(data.data, wallet.id)
+                    dispatch(HIDE_LOADER())
+                    setItems(data.data)
+                    console.warn(data.data);
+
                 }
             })
             .catch(error => {
+                dispatch(HIDE_LOADER())
                 console.warn(error)
                 alert(error.message);
-                this.setState({ loading: false })
+
             });
     };
 
-    processResponse(response) {
+    const processResponse = (response) => {
         const statusCode = response.status;
         const data = response.json();
         return Promise.all([statusCode, data]).then(res => ({
@@ -117,252 +84,241 @@ export default class Transaction extends Component {
         }));
     }
 
-    currencyFormat(n) {
+    const currencyFormat = (n) => {
         return n.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
     }
 
-    sortTransactions(data, id) {
-        let cr_array = [];
-        let dr_array = [];
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].debit_wallet_id == id) {
-                dr_array.push(data[i])
-            } else {
-                cr_array.push(data[i])
-            }
-        }
-        var cr_amount = 0
-        for (let i = 0; i < cr_array.length; i++) {
-            cr_amount = cr_amount + parseInt(cr_array[i].amount);
-        }
-        var dr_amount = 0
-        for (let i = 0; i < dr_array.length; i++) {
-            dr_amount = dr_amount + parseInt(dr_array[i].amount);
-        }
-        this.setState({ loading: false })
-        this.setState({ credit_items: cr_array, cr_amount: cr_amount, debit_items: dr_array, dr_amount: dr_amount })
-
-    }
-
-    segmentClicked = (index) => {
-        this.setState({
-            activeIndex: index
-        })
-    }
 
 
-
-    renderCreditResuts(data) {
-        Moment.locale('en');
-        const { wallet } = this.state
-        let cat = [];
-        for (var i = 0; i < data.length; i++) {
-            let id = i;
-            cat.push(
-                <TouchableOpacity onPress={() => this.selectTransaction(data[id])} style={styles.resultBox}>
-                    <View style={styles.resultDescription}>
-                        <View style={styles.resultTextDescription}>
-                            {data[i].status == 'success' ?
-                                <Text style={{ fontFamily: 'Poppins-Light', marginLeft:3, color: 'green', fontWeight: '600', fontSize: 8, }}>{data[i].status} </Text>
-                                :
-                                <Text style={{ fontFamily: 'Poppins-Light', color: 'red', marginLeft:3, fontWeight: '600', fontSize: 8, }}>{data[i].status} </Text>
-                            }
-                            <Text style={{ fontFamily: 'Poppins-Medium', color: '#0F0E43', fontSize: 12, marginLeft:3, }}>{Moment(data[i].created_at).format('llll')} </Text>
-
-                            <View style={{ }}>
-                                <Text style={{ fontFamily: 'Poppins-Regular', color: '#3E3E3E', fontSize: 10, opacity: 0.8, }}>{data[i].dr_first_name} {data[i].dr_last_name}</Text>
-                            </View>
-
-                        </View>
-                        <View style={styles.resultButtonContainer}>
-                            <Text style={{ fontFamily: 'Poppins-Regular', color: '#2D2C71', fontSize: 14, }}>N {data[i].amount}  </Text>
-                        </View>
-                    </View>
-                </TouchableOpacity >
-            );
-        }
-        return cat;
-    }
-
-    renderDebitResuts(data) {
-        Moment.locale('en');
-        const { wallet } = this.state
-        let cat = [];
-        for (var i = 0; i < data.length; i++) {
-            let id = i;
-            cat.push(
-                <TouchableOpacity onPress={() => this.selectTransaction(data[id])} style={styles.resultBox}>
-
-                    <View style={styles.resultDescription}>
-                        <View style={styles.resultTextDescription}>
-
-                            {data[i].status == 'success' || data[i].status == 'Success' ?
-                                <Text style={{ fontFamily: 'Poppins-Light',  color: 'green', fontWeight: '600', fontSize: 8, }}>{data[i].status} </Text>
-                                :
-                                <Text style={{ fontFamily: 'Poppins-Light', color: 'red', fontWeight: '600', fontSize: 8, }}>{data[i].status} </Text>
-                            }
-
-
-                            <Text style={{ fontFamily: 'Poppins-Medium', color: '#0F0E43', fontSize: 12, }}>{Moment(data[i].created_at).format('llll')} </Text>
-                            <View style={{ }}>
-                                <Text style={{ fontFamily: 'Poppins-Regular', color: '#3E3E3E', fontSize: 10, opacity: 0.8,}}>{data[i].cr_first_name} {data[i].cr_last_name} {data[i].category == 'bills_payment' ? data[i].biller_category : getType(data[i].category)} </Text>
-                            </View>
-                        </View>
-                        <View style={styles.resultButtonContainer}>
-                            <Text style={{ fontFamily: 'Poppins-Regular', color: '#2D2C71', fontSize: 14, }}>N{data[i].amount}  </Text>
-                        </View>
-                    </View>
-                </TouchableOpacity >
-            );
-        }
-        return cat;
-    }
-
-
-    selectTransaction(item) {
-        this.props.navigation.navigate('transaction_d', { items: item })
-    }
-
-    render() {
-        const width = Dimensions.get('window').width - 60
-        const height = 220
-        if (this.state.loading) {
-            return (
-                <ActivityIndicator />
-            );
-        }
+    const renderAlertBody1 = () => {
         return (
-            <SafeAreaView style={{ flex: 1, height: Dimensions.get('window').height, }}>
-                <StatusBar barStyle="dark-content" hidden={false} backgroundColor="#3AA34E" />
-                <LinearGradient colors={['#3AA34E', '#005A11']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, height: Dimensions.get('window').height, }}>
-
-                    <View style={styles.body}>
-                        <View style={{ flexDirection: 'row', height: 60, paddingLeft: 20, width: Dimensions.get('window').width, }}>
-                            <View style={{ justifyContent: 'center', width: 30, alignItems: 'center' }}></View>
-                            <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
-                                <Text style={styles.title}>Transaction</Text>
-                            </View>
-
-
-                            <TouchableOpacity onPress={() => this.getWalletTransactionRequest()} style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
-                                <Icon
-                                    name="reload"
-                                    size={20}
-                                    type='material-community'
-                                    color={color.primary_color}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.mainContent}>
-                            {this.state.show_menu ? this._renderSubMenu() : null}
-                            <View>
-                                {this.state.activeIndex == 0 ? this.renderCredit() : this.renderDebit()}
-                            </View>
-                        </View>
+            <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#2AAD86', marginTop: 20, fontSize: 25, fontFamily: font.BLACK }}>Successful!</Text>
+                </View>
+                <View style={{ marginBottom: 15 }}>
+                    <View style={{ paddingTop: 1, paddingBottom: 10 }}>
+                        <Button style={styles.modalTansButtonContainer} block iconLeft>
+                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{'Go Home'}</Text>
+                        </Button>
                     </View>
-                </LinearGradient>
-            </SafeAreaView>
-        );
-    }
-
-
-
-    renderCredit() {
-        return (
-            <ScrollView>
-                {this.renderGraph("Credit", this.state.cr_amount, [])}
-                {this.renderCreditResuts(this.state.credit_items)}
-            </ScrollView>
-        )
-    }
-
-    renderDebit() {
-        return (
-            <ScrollView>
-                {this.renderGraph("Debit", this.state.dr_amount, [])}
-                {this.renderDebitResuts(this.state.debit_items)}
-            </ScrollView>
-        )
-    }
-
-    renderGraph(type, amount, balance, data) {
-        return (
-
-            <View style={styles.sideContent}>
-                <View style={{}}>
-                <View style={{ justifyContent: 'center', flexDirection: 'row',  alignItems: 'center',  }}>
-                    <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 22, color: '#3aa34e90', textAlign: 'center', }}>NGN {this.currencyFormat(amount)}</Text>
-                   </View>
-                    <View style={{ justifyContent: 'center', flexDirection: 'row',  alignItems: 'center',  }}>
-                        <Text style={{ fontFamily: 'Poppins-Regular', marginLeft: 20, fontSize: 11, color: '#3E3E3E70', textAlign: 'center' }}>Total Balance </Text>
-                        <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12, color: '#3E3E3E70', textAlign: 'center', marginRight: 20, }}>NGN{this.state.wallet.balance}</Text>
-                    </View>
-                    {this.state.show_graph_line ?
-                        <>
-                            <View style={styles.whitecard}>
-                                <LineChart
-                                    data={data}
-                                    width={Dimensions.get('window').width - 8}
-                                    height={200}
-                                    chartConfig={chartConfig}
-                                    withInnerLines={false}
-                                    withOuterLines={true}
-                                    withShadow={false}
-                                />
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', justifyContent: 'flex-end', marginRight: 20, marginBottom: 6, }}>
-                                <Icon
-                                    name="graph"
-                                    size={20}
-                                    type='simple-line-icon'
-                                    color="green"
-                                />
-                                <Text style={{ marginLeft: 10, fontFamily: 'Poppins-Regular', color: '#2D2C71', marginRight: 10, fontSize: 14, }}>Hide graph </Text>
-                                <TouchableOpacity onPress={() => this.setState({ show_graph_line: false })} style={{ flexDirection: 'row', marginLeft: 30, alignItems: 'center', justifyContent: "center" }} >
-                                    <Icon
-                                        active
-                                        name="eye-with-line"
-                                        type='entypo'
-                                        color={'#707070'}
-                                        size={20}
-                                    />
-                                </TouchableOpacity>
-                            </View></> : null}
 
                 </View>
 
             </View>
-
-
-        );
+        )
     }
 
-    _renderSubMenu() {
+    const renderDateOfTransaction = () => {
         return (
-            <View style={{ flexDirection: 'row', borderTopLeftRadius: 20, borderTopRightRadius: 20,  backgroundColor:'#EFF2F5' }}>
+            <View style={{ flex: 1 }}>
+
+                {dateOfTransaction.map((item) => (
+                    <View style={{ flexDirection: 'row', borderWidth: 0.5, borderColor: '#BFBFBF', paddingVertical: 25, paddingHorizontal: 20 }}>
+                        <View style={{ flex: 1, }}>
+                            <Text style={{ color: lightTheme.PRIMARY_TEXT_COLOR, fontSize: 16, fontFamily: font.BOLD }}>{item.primary_text}</Text>
+                            <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 10, fontFamily: font.MEDIUM }}>{item.secondary_text}</Text>
+                        </View>
+
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <RadioButton checked={true} />
+                        </View>
+                    </View>
+                ))}
 
 
-                <TouchableOpacity style={[this.state.activeIndex == 1 ? styles.activeType : styles.inActiveType]}
-                    onPress={() => this.segmentClicked(1)}>
+                <View style={{ marginBottom: 15, marginTop: 20 }}>
+                    <View style={{ paddingTop: 1, paddingBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
+                        <TouchableOpacity style={styles.modalTansButtonContainer} block iconLeft>
+                            <Text style={{ color: '#fff', marginHorizontal: 40, fontSize: 14, fontWeight: '600' }}>{'Apply'}</Text>
+                        </TouchableOpacity>
+                    </View>
 
-                    <Text style={[this.state.activeIndex == 1 ? styles.toggleText : styles.toggleTextInactive]}>Debit</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[this.state.activeIndex == 0 ? styles.activeType : styles.inActiveType]}
-                    onPress={() => this.segmentClicked(0)}
-                >
-
-                    <Text style={[this.state.activeIndex == 0 ? styles.toggleText : styles.toggleTextInactive]}>Credit</Text>
-                </TouchableOpacity>
-
-
+                </View>
 
             </View>
-        );
+        )
+    }
+
+
+    const renderTypeOfTransaction = () => {
+        return (
+            <View style={{ flex: 1 }}>
+
+                {typeOfTransaction.map((item) => (
+                    <View style={{ flexDirection: 'row', borderWidth: 0.5, borderColor: '#BFBFBF', paddingVertical: 25, paddingHorizontal: 20 }}>
+                        <View style={{ flex: 1, }}>
+                            <Text style={{ color: lightTheme.PRIMARY_TEXT_COLOR, fontSize: 16, fontFamily: font.BOLD }}>{item.primary_text}</Text>
+                            <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 10, fontFamily: font.MEDIUM }}>{item.secondary_text}</Text>
+                        </View>
+
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <RadioButton checked={true} />
+                        </View>
+                    </View>
+                ))}
+
+
+                <View style={{ marginBottom: 15, marginTop: 20 }}>
+                    <View style={{ paddingTop: 1, paddingBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
+                        <TouchableOpacity style={styles.modalTansButtonContainer} block iconLeft>
+                            <Text style={{ color: '#fff', marginHorizontal: 40, fontSize: 14, fontWeight: '600' }}>{'Apply'}</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                </View>
+
+            </View>
+        )
+    }
+
+
+    const renderResuts = (data) => {
+        Moment.locale('en');
+        return data.map((item) => (
+            <TransactionItem item={item} isdebit={item.debit_wallet_id == wallet.id} />
+        ))
 
     }
 
+    const renderAlert = () => {
+        return (
+            <SlideUpAlert
+                title={'Hold on'}
+                height={alert.height}
+                showButton={true}
+                onClose={() => setShowAlert(false)}
+                Body={() => alert.type == 1 ? renderTypeOfTransaction() : renderDateOfTransaction()} />
+        )
+    }
+
+
+    const selectTransaction = (item) => {
+        // navigation.navigate('transaction_d', { items: item })
+    }
+
+    return (
+        <View style={{ flex: 1, height: Dimensions.get('window').height, backgroundColor: lightTheme.PRIMARY_COLOR, }}>
+            <StatusBar barStyle="dark-content" hidden={false} backgroundColor={lightTheme.PRIMARY_COLOR} />
+            <View style={styles.body}>
+                <View style={{ flexDirection: 'row', height: 60, paddingLeft: 20, marginTop: 30, width: Dimensions.get('window').width, backgroundColor: lightTheme.PRIMARY_COLOR }}>
+
+                    <View style={{ justifyContent: 'center', flex: 1, }}>
+                        <Text style={styles.title}>Transactions</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => getWalletTransactionRequest()} style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
+                        <Icon
+                            name="reload"
+                            size={20}
+                            type='material-community'
+                            color={color.primary_color}
+                        />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.mainContent}>
+                    <View style={{ marginTop: 20, flexDirection: 'row', marginHorizontal: 20 }}>
+                        <View style={{ flexDirection: 'row', flex: 1, }}>
+
+                            <TouchableOpacity onPress={() => [setShowAlert(true), setAlert({ height: 350, type: 1 })]} style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Type</Text>
+                                <Icon
+                                    name="chevron-down"
+                                    size={20}
+                                    type='material-community'
+                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
+                                />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => [setShowAlert(true), setAlert({ height: 500, type: 2 })]} style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Date</Text>
+                                <Icon
+                                    name="chevron-down"
+                                    size={20}
+                                    type='material-community'
+                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
+                                />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Sort By</Text>
+                                <Icon
+                                    name="chevron-down"
+                                    size={20}
+                                    type='material-community'
+                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
+                                />
+                            </TouchableOpacity>
+
+
+                        </View>
+
+                        <View style={{ width: 1, backgroundColor: lightTheme.INACTIVE_COLOR, marginHorizontal: 10 }} />
+
+                        <View style={{}}>
+
+                            <TouchableOpacity style={{ borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10, padding: 5, }}>
+
+                                <Icon
+                                    name="search1"
+                                    size={20}
+                                    type='antdesign'
+                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={{ marginTop: 20 }}>
+                        {renderResuts(items)}
+                    </View>
+                </View>
+            </View>
+            {showAlert ? renderAlert() : null}
+        </View>
+    );
 }
+
+
+
+
+
+export default Transaction
+
+
+const dateTo = moment().format('ddd D, MMM, YYYY');
+
+const dateOfTransaction =
+    [
+        {
+            primary_text: "Last 7 Days",
+            secondary_text: moment().subtract(7, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+        },
+        {
+            primary_text: "Last 30 Days",
+            secondary_text: moment().subtract(30, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+        },
+        {
+            primary_text: "Last 90 Days",
+            secondary_text: moment().subtract(90, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+        },
+        {
+            primary_text: "Custom Date",
+            secondary_text: moment().subtract(90, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+        }
+    ]
+
+
+const typeOfTransaction =
+    [
+        {
+            primary_text: "Credit",
+            secondary_text: "Money sent to you",
+        },
+        {
+            primary_text: "Debit",
+            secondary_text: "Money you sent to someone",
+        },
+    ]
+
+
+
 const styles = StyleSheet.create({
     container: {
         width: Dimensions.get('window').width,
@@ -382,8 +338,7 @@ const styles = StyleSheet.create({
         width: Dimensions.get('window').width,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        backgroundColor: '#EFF2F5'
-
+        backgroundColor: '#FFF'
     },
     sideContent: {
         paddingTop: 30,
@@ -443,51 +398,26 @@ const styles = StyleSheet.create({
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height,
     },
-    activeType: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: "#fff",
-        flexDirection: 'row',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
-    inActiveType: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
-    toggleText: {
-        color: color.black,
-        fontSize: 14,
-        fontWeight: '200',
-        fontFamily: 'Poppins-SemiBold',
-        marginBottom: 10,
-        marginTop: 10,
-        marginLeft: 4
-    },
-    toggleTextInactive: {
-        color: '#5F5C7F',
-        fontSize: 14,
-        fontWeight: '200',
-        fontFamily: 'Poppins-SemiBold',
-        marginBottom: 10,
-        marginTop: 10,
-        marginLeft: 4
-    },
+
+
     title: {
         marginTop: 2,
         marginBottom: 2,
         marginRight: 13,
         marginLeft: 13,
-        fontSize: 15,
+        fontSize: 16,
         color: '#fff',
-        textAlign: 'center',
         fontFamily: 'Poppins-Bold'
     },
+    modalTansButtonContainer: {
+        backgroundColor: lightTheme.PRIMARY_COLOR,
+        height: 40,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+
+    }
+
 });
 
 
