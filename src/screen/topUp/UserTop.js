@@ -8,7 +8,7 @@ import OTPInputView from '@twotalltotems/react-native-otp-input'
 import LinearGradient from 'react-native-linear-gradient';
 import URL from '../../component/server'
 import { PulseIndicator } from 'react-native-indicators';
-import QRCode from 'react-native-qrcode-svg';
+import MiniCardBalance from '../../component/view/MiniCardBalance';
 import { baseUrl, getToken, storeWallet } from '../../utilities';
 
 import color from '../../component/color'
@@ -106,75 +106,7 @@ class UserTop extends Component {
                         <View style={{ justifyContent: 'center', width: 40, alignItems: 'center' }}></View>
                     </View>
                     <View style={styles.mainbody}>
-                        <View style={styles.card_container}>
-                            <LinearGradient start={{ x: 0.0, y: 0.25 }} end={{ x: 0.5, y: 1.0 }} colors={['#3AA34E', '#005A11']} style={styles.card_body} >
-                                <View style={styles.currency_container}>
-                                    <View style={{ marginLeft: 10, padding: 6, backgroundColor: '#ffffff20', justifyContent: 'center', borderRadius: 40, marginBottom: 5 }}>
-                                        <Icon
-                                            name="currency-ngn"
-                                            type='material-community'
-                                            size={18}
-                                            color={color.white}
-                                        />
-                                    </View>
-                                </View>
-                                <View style={styles.detatails_container}>
-                                    <View style={styles.card_part_one}>
-                                        <Text style={{ color: color.white, fontSize: 12, fontWeight: '200', flex: 1, }}> Naira Wallet</Text>
-
-                                        {this.state.showBalance ?
-
-
-                                            <TouchableOpacity onPress={() => this.setState({ showBalance: false })} style={{ flexDirection: 'row', marginLeft: 30, alignItems: 'center', justifyContent: "center" }} >
-                                                <Icon
-                                                    active
-                                                    name="eye-with-line"
-                                                    type='entypo'
-                                                    color={'#ffffff70'}
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-                                            :
-                                            <TouchableOpacity onPress={() => this.setState({ showBalance: true })} style={{ flexDirection: 'row', marginLeft: 30, alignItems: 'center', justifyContent: "center" }} >
-                                                <Icon
-                                                    active
-                                                    name="eye"
-                                                    type='entypo'
-                                                    color={'#ffffff70'}
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-
-                                        }
-
-                                    </View>
-                                    <View style={styles.card_part_two}>
-
-                                        {this.state.showBalance ?
-                                            <Text style={{ fontFamily: 'Poppins-Medium', color: color.white, fontSize: 22, }}>NGN {this.state.balance}</Text>
-                                            :
-                                            <Text style={{ fontFamily: 'Poppins-Medium', color: color.white, fontSize: 22, }}>NGN ****</Text>
-                                        }
-
-                                    </View>
-                                    <View style={styles.card_part_three}>
-                                        <View style={{ flex: 1, justifyContent: 'center' }}>
-                                            <Text style={{ color: color.white, fontSize: 11, fontFamily: 'Poppins-Regular', flex: 1, }}>Ledger Balance</Text>
-                                        </View>
-                                        <View style={{ backgroundColor: '#fff', width: 2, marginRight: 10 }} />
-                                        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-                                            {this.state.showBalance ?
-                                                <Text style={{ fontFamily: 'Poppins-SemiBold', color: color.white, fontSize: 11, }}>NGN {this.state.ledger_balance}</Text>
-                                                :
-                                                <Text style={{ fontFamily: 'Poppins-SemiBold', color: color.white, fontSize: 11, }}>NGN *****</Text>
-                                            }
-
-                                        </View>
-                                    </View>
-                                </View>
-                            </LinearGradient>
-
-                        </View>
+                        <MiniCardBalance balance={this.state.balance} />
                        <View style={{}}>
                        <Text style={{marginLeft:30, marginTop:40,  marginRight:25, fontSize:14, color:color.button_blue, fontFamily: 'Montserrat-Bold'}}>Where would you like to top from?</Text>
                         <TouchableOpacity onPress={() =>  this.props.navigation.navigate('top_bank_d')} style={{ flexDirection: 'row',borderRadius:15, padding:15, marginTop: 20,  marginLeft: 25, marginRight:25, backgroundColor: color.grey }}>

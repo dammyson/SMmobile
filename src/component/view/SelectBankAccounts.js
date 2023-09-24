@@ -5,14 +5,15 @@ import { Container, Content, View, Text, Button, Left, Right, Body, Title, List,
 import { Card, Icon, SocialIcon } from 'react-native-elements'
 import LinearGradient from 'react-native-linear-gradient';
 import { PulseIndicator } from 'react-native-indicators';
-import URL from '../../component/server'
-import color from '../../component/color'
-import { getToken, getWallet, processResponse } from '../utilities';
-import { baseUrl } from '../../utilities';
+import URL from '../server'
+import color from '../color'
+
+import { getToken, baseUrl,processResponse } from '../../utilities';
 import { lightTheme } from '../../theme/colors';
+import { font } from '../../constants';
 
 
-const SelectBank =(onClose, items_)=> {
+const SelectBank =({onClose, onSelect, items_})=> {
 
   const [merchant, setMerchant] = useState('ay345');
   const [items, setItems] = useState([]);
@@ -39,7 +40,7 @@ const SelectBank =(onClose, items_)=> {
   }
 
   removeBankRequest=(bank_id)=> {
-    const { auth } = this.state
+    
     this.setState({ loading: true });
 
     fetch(URL.urltwo + '/wallet/account/delete/' + bank_id, {
@@ -61,25 +62,30 @@ const SelectBank =(onClose, items_)=> {
 
   }
 
-  const getWalletRequest=(auth)=> {
-    const { onClose, removeBank } = this.props;
-    console.warn(auth);
+  const getWalletRequest =async()=> {
+   
+ 
 
-    fetch(baseUrl() + '/bank', {
+    fetch(baseUrl() + '/beneficiaries/fetch?type=bank', {
       method: 'GET', headers: {
         Accept: 'application/json',
-        'Authorization': 'Bearer ' + auth,
+        'Authorization': 'Bearer ' + await getToken(),
         'Content-Type': 'application/json',
       }
     })
-      .then(res => res.json())
-      .then(res => {
-        AsyncStorage.setItem('wallet', JSON.stringify(res.data));
-        this.setState({
-          wallet: res.data,
-          loading: false
-        })
-        removeBank(res.data.bank_accounts)
+    .then(processResponse)
+    .then(res => {
+      const { statusCode, data } = res;
+      console.warn(statusCode, data);
+      if (statusCode == 200 || statusCode == 201) {
+        setItems(data.data)
+      }
+       // AsyncStorage.setItem('wallet', JSON.stringify(res.data));
+        // this.setState({
+        //   wallet: res.data,
+        //   loading: false
+        // })
+        // removeBank(res.data.bank_accounts)
 
       })
       .catch(error => {
@@ -90,6 +96,46 @@ const SelectBank =(onClose, items_)=> {
 
   };
 
+      useEffect(() => {
+        
+        getWalletRequest();
+
+      },[])
+
+
+
+  const  _selectBank = (index) => {
+    onSelect(index);
+  }
+ const renderItem = ({ item }) => {
+    return (
+      <View style={styles.textInputContainer}>
+        <TouchableOpacity onPress={() => _selectBank(item)} style={styles.input}>
+          <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
+            <View style={{ justifyContent: 'center', }} >
+              <Icon
+                active
+                name="bank"
+                type='font-awesome'
+                color={color.primary_color}
+                size={20}
+              />
+            </View>
+
+            <View style={{ marginLeft: 20, flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} >
+              <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: font.SEMI_BOLD }}>{item.bank_name} </Text>
+            </View>
+            <View style={{ justifyContent: 'center', marginRight: 15, alignItems: 'flex-end' }} >
+              <Text style={{ fontSize: 10, color: '#3E3E3E', fontFamily: font.REGULAR  }}>{item.account_number} </Text>
+              <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: font.SEMI_BOLD  }}> {item.account_name} </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+    )
+
+  }
 
 
     if (loading) {
@@ -135,10 +181,9 @@ const SelectBank =(onClose, items_)=> {
             <FlatList
               style={{ paddingBottom: 5 }}
               data={items}
-              renderItem={this.renderItem}
+              renderItem={renderItem}
               keyExtractor={item => item.id}
-              ItemSeparatorComponent={this.renderSeparator}
-              ListHeaderComponent={this.renderHeader}
+            
             />
 
           </View>
@@ -150,39 +195,7 @@ const SelectBank =(onClose, items_)=> {
   
 
 
- const  _selectBank = (index) => {
-    const { onSelect, } = this.props;
-    onSelect(index);
-  }
- const renderItem = ({ item, }) => {
-    return (
-      <View style={styles.textInputContainer}>
-        <TouchableOpacity onPress={() => _selectBank(item)} style={styles.input}>
-          <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
-            <View style={{ justifyContent: 'center', }} >
-              <Icon
-                active
-                name="bank"
-                type='font-awesome'
-                color={color.primary_color}
-                size={20}
-              />
-            </View>
 
-            <View style={{ marginLeft: 20, flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} >
-              <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{item.beneficiary_bank_name} </Text>
-            </View>
-            <View style={{ justifyContent: 'center', marginRight: 15, alignItems: 'flex-end' }} >
-              <Text style={{ fontSize: 10, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', }}>{item.beneficiary_account_number} </Text>
-              <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}> {item.beneficiary_account_name} </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-    )
-
-  }
 
 }
 

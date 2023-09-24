@@ -132,7 +132,7 @@ const items = [
             },
             {
                 text: 'Change Transaction PIN',
-                value: 'logout'
+                value: 'change'
             },
             {
                 text: 'Recover PIN',

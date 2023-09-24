@@ -114,7 +114,7 @@ up your sendmonny wallet anytime?</Text>
                                         <Text style={{ fontSize: 10, color: '#0F0E43', opacity: 0.4, fontFamily: 'Poppins-Regular' }}>Account Number </Text>
                                         <Text style={{ fontSize: 12, color: '#0F0E43', opacity: 0.9, fontFamily: 'Poppins-SemiBold' }}>{details.account_number}</Text>
                                     </View>
-                                    <TouchableOpacity onPress={() => this.handlerLongClick(details.beneficiary_account_number)} style={{padding:3 , justifyContent:'flex-end'}}>
+                                    <TouchableOpacity onPress={() => this.handlerLongClick(details.account_number)} style={{padding:3 , justifyContent:'flex-end'}}>
                                         <Icon
                                             name="copy"
                                             size={20}

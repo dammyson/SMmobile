@@ -2,7 +2,7 @@
 // React native and others libraries imports
 import React, { useEffect, useState } from 'react';
 import { Alert, ImageBackground, View, ScrollView, Dimensions, StyleSheet, TouchableOpacity, Image, AsyncStorage, StatusBar } from 'react-native';
-import { Container, Content, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
+import { Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 import { Card, Icon, SocialIcon } from 'react-native-elements'
 import color from '../../component/color'
 import Moment from 'moment';
@@ -18,6 +18,7 @@ import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
 import SlideUpAlert from '../../component/SlideUpAlert';
 import { font } from '../../constants';
 import RadioButton from '../../component/RadioButton';
+import Receipt from '../../component/view/Receipt';
 
 Moment.locale('en');
 
@@ -32,9 +33,19 @@ const Transaction = () => {
 
     const [loading, setLoading] = useState(false)
     const [items, setItems] = useState([])
+
+
+    const [fItems, setFItems] = useState([])
     const [wallet, setWallet] = useState({})
     const [showAlert, setShowAlert] = useState(false)
     const [alert, setAlert] = useState({ height: 350, type: 1 })
+
+    const [fType, setFType] = useState("")
+    const [fDate, setFDate] = useState("")
+    const [showReceipt, setShowReceipt] = useState(false)
+
+
+    const [details, setDetails] = useState({})
 
 
     useEffect(() => {
@@ -63,6 +74,7 @@ const Transaction = () => {
                 if (statusCode == 200) {
                     dispatch(HIDE_LOADER())
                     setItems(data.data)
+                    setFItems(data.data)
                     console.warn(data.data);
 
                 }
@@ -84,10 +96,74 @@ const Transaction = () => {
         }));
     }
 
-    const currencyFormat = (n) => {
-        return n.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+
+    const OnTransactionSelected = (item) => {
+        // console.warn(item)
+        setDetails(item)
+        setShowReceipt(true)
     }
 
+
+    const renderReceipt = () => {
+
+        return (<Receipt details={details} wallet={wallet} onClose={()=> setShowReceipt(false) } balance={2000} onDownload={() => console.warn("downloaded")} onShare={() => console.warn("onShare")} />)
+    }
+
+    // const currencyFormat = (n) => {
+    //     return n.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+    // }
+
+
+    const applyFilter = (arg, param) => {
+
+        if (arg === "type") {
+            if (param === "Debit") {
+                const filtered = items.filter((item) => item.debit_wallet_id === wallet.id)
+                setFItems(filtered)
+            } else if (param === "Credit") {
+                const filtered = items.filter((item) => item.debit_wallet_id !== wallet.id)
+                setFItems(filtered)
+            }
+        } else if (arg === "date") {
+            if (param === "7Days") {
+                const filtered = items.filter((item) => isDateInBetween(item.created_at, 7))
+                setFItems(filtered)
+            }
+
+            else if (param === "30Days") {
+                const filtered = items.filter((item) => isDateInBetween(item.created_at, 30))
+                setFItems(filtered)
+            }
+
+            else if (param === "90Days") {
+                const filtered = items.filter((item) => isDateInBetween(item.created_at, 90))
+                setFItems(filtered)
+            }
+        }
+
+
+        setShowAlert(false)
+
+
+    }
+
+    const isDateInBetween = (date, number) => {
+
+        const now = new Date();
+        const end = new Date();
+        end.setDate(end.getDate() - number);
+
+        console.error(now, end, date)
+
+        const start = Date.parse(end);
+        const finish = Date.parse(now);
+        const d = Date.parse(date);
+
+        console.error(start, finish, d)
+
+        return d >= start && d <= finish
+
+    }
 
 
     const renderAlertBody1 = () => {
@@ -121,7 +197,7 @@ const Transaction = () => {
                         </View>
 
                         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <RadioButton checked={true} />
+                            <RadioButton onPress={(arg) => setFDate(arg)} value={item.value} checked={fDate} />
                         </View>
                     </View>
                 ))}
@@ -129,7 +205,7 @@ const Transaction = () => {
 
                 <View style={{ marginBottom: 15, marginTop: 20 }}>
                     <View style={{ paddingTop: 1, paddingBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.modalTansButtonContainer} block iconLeft>
+                        <TouchableOpacity onPress={() => applyFilter("date", fDate)} style={styles.modalTansButtonContainer} block iconLeft>
                             <Text style={{ color: '#fff', marginHorizontal: 40, fontSize: 14, fontWeight: '600' }}>{'Apply'}</Text>
                         </TouchableOpacity>
                     </View>
@@ -153,7 +229,7 @@ const Transaction = () => {
                         </View>
 
                         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <RadioButton checked={true} />
+                            <RadioButton onPress={(arg) => setFType(arg)} value={item.primary_text} checked={fType} />
                         </View>
                     </View>
                 ))}
@@ -161,7 +237,7 @@ const Transaction = () => {
 
                 <View style={{ marginBottom: 15, marginTop: 20 }}>
                     <View style={{ paddingTop: 1, paddingBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.modalTansButtonContainer} block iconLeft>
+                        <TouchableOpacity onPress={() => applyFilter("type", fType)} style={styles.modalTansButtonContainer} block iconLeft>
                             <Text style={{ color: '#fff', marginHorizontal: 40, fontSize: 14, fontWeight: '600' }}>{'Apply'}</Text>
                         </TouchableOpacity>
                     </View>
@@ -176,7 +252,9 @@ const Transaction = () => {
     const renderResuts = (data) => {
         Moment.locale('en');
         return data.map((item) => (
-            <TransactionItem item={item} isdebit={item.debit_wallet_id == wallet.id} />
+
+            <TransactionItem item={item} selectTransaction={(item) => OnTransactionSelected(item)} isdebit={item.debit_wallet_id == wallet.id} />
+
         ))
 
     }
@@ -193,9 +271,6 @@ const Transaction = () => {
     }
 
 
-    const selectTransaction = (item) => {
-        // navigation.navigate('transaction_d', { items: item })
-    }
 
     return (
         <View style={{ flex: 1, height: Dimensions.get('window').height, backgroundColor: lightTheme.PRIMARY_COLOR, }}>
@@ -237,7 +312,7 @@ const Transaction = () => {
                                     color={lightTheme.PRIMARY_INACTIVE_COLOR}
                                 />
                             </TouchableOpacity>
-                            <TouchableOpacity style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                            {/* <TouchableOpacity style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
                                 <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Sort By</Text>
                                 <Icon
                                     name="chevron-down"
@@ -246,33 +321,23 @@ const Transaction = () => {
                                     color={lightTheme.PRIMARY_INACTIVE_COLOR}
                                 />
                             </TouchableOpacity>
-
+ */}
 
                         </View>
 
-                        <View style={{ width: 1, backgroundColor: lightTheme.INACTIVE_COLOR, marginHorizontal: 10 }} />
 
-                        <View style={{}}>
-
-                            <TouchableOpacity style={{ borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10, padding: 5, }}>
-
-                                <Icon
-                                    name="search1"
-                                    size={20}
-                                    type='antdesign'
-                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
-                                />
-                            </TouchableOpacity>
-                        </View>
                     </View>
                     <View style={{ marginTop: 20 }}>
-                        {renderResuts(items)}
+                        {renderResuts(fItems)}
                     </View>
                 </View>
             </View>
             {showAlert ? renderAlert() : null}
+            {showReceipt ? renderReceipt() : null}
         </View>
     );
+
+
 }
 
 
@@ -289,19 +354,23 @@ const dateOfTransaction =
         {
             primary_text: "Last 7 Days",
             secondary_text: moment().subtract(7, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+            value: "7Days"
         },
         {
             primary_text: "Last 30 Days",
             secondary_text: moment().subtract(30, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+            value: "30Days"
         },
         {
             primary_text: "Last 90 Days",
             secondary_text: moment().subtract(90, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+            value: "90Days"
         },
-        {
-            primary_text: "Custom Date",
-            secondary_text: moment().subtract(90, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
-        }
+        // {
+        //     primary_text: "Custom Date",
+        //     secondary_text: moment().subtract(90, 'd').format('ddd D, MMM, YYYY') + ' - ' + dateTo,
+        //     value:""
+        // }
     ]
 
 

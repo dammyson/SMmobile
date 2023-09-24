@@ -85,7 +85,7 @@ class AddPin extends Component {
         if (statusCode === 201) {
           console.warn(statusCode, data, "THISSS");
           this.setState({ done: true,  confirm: false })
-          AsyncStorage.setItem('step', 'c');
+          AsyncStorage.setItem('step', 'three');
         } else {
           this.setState({ confirm: false })
           Alert.alert('Operation failed', 'Please check your phone network and retry', [{ text: 'Okay' }])

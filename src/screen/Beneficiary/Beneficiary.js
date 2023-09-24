@@ -1,7 +1,7 @@
 
 // React native and others libraries imports
 import React, { useEffect, useState } from 'react';
-import { Alert, ImageBackground, View, ScrollView, Dimensions, StyleSheet, TouchableOpacity, Image, AsyncStorage, StatusBar } from 'react-native';
+import { Alert, ImageBackground, View, ScrollView, Dimensions, StyleSheet, TouchableOpacity, Image, AsyncStorage, StatusBar ,  PixelRatio,} from 'react-native';
 import { Container, Content, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
 import { Card, Icon, SocialIcon } from 'react-native-elements'
 import color from '../../component/color'
@@ -9,7 +9,7 @@ import Moment from 'moment';
 import moment from "moment";
 
 import { baseUrl, getToken, getUser, getWallet } from '../../utilities';
-import TransactionItem from './TransactionItem';
+
 import { lightTheme } from '../../theme/colors';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,11 +18,13 @@ import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
 import SlideUpAlert from '../../component/SlideUpAlert';
 import { font } from '../../constants';
 import RadioButton from '../../component/RadioButton';
+import AddBeneficiary from '../../component/view/AddBeneficiary';
+import BeneficiaryItem from './BeneficiaryItem';
 
 Moment.locale('en');
 
 
-// in Expo - swipe left to see the following styling, or create your own
+// in Expo - swipe left to see the following styling, or create your own 2037083142
 
 const Beneficiary = () => {
 
@@ -30,16 +32,17 @@ const Beneficiary = () => {
     const dispatch = useDispatch();
 
 
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [items, setItems] = useState([])
     const [wallet, setWallet] = useState({})
     const [showAlert, setShowAlert] = useState(false)
     const [alert, setAlert] = useState({ height: 350, type: 1 })
+    const [showAddBeneficiary, setShowAddBeneficiary] = useState(false)
 
 
     useEffect(() => {
         setWalletValue()
-        getWalletTransactionRequest()
+        getBeneficiaryRequest()
     }, []);
 
 
@@ -48,32 +51,43 @@ const Beneficiary = () => {
         setWallet(JSON.parse(await getWallet()))
     }
 
-    const getWalletTransactionRequest = async () => {
-        //  dispatch(SHOW_LOADER("Get Tentative"))
-        fetch(baseUrl() + '/transactions/', {
-            method: 'GET', headers: {
-                Accept: 'application/json',
-                'Authorization': 'Bearer ' + await getToken(),
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(processResponse)
-            .then(res => {
-                const { statusCode, data } = res;
-                if (statusCode == 200) {
-                    dispatch(HIDE_LOADER())
-                    setItems(data.data)
-                    console.warn(data.data);
 
-                }
-            })
-            .catch(error => {
-                dispatch(HIDE_LOADER())
-                console.warn(error)
-                alert(error.message);
+  const getBeneficiaryRequest =async()=> {
+   
+ 
+dispatch(SHOW_LOADER("getting beneficiaries"))
+    fetch(baseUrl() + '/beneficiaries/fetch?type=bank', {
+      method: 'GET', headers: {
+        Accept: 'application/json',
+        'Authorization': 'Bearer ' + await getToken(),
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(processResponse)
+    .then(res => {
+        setLoading(false)
+      const { statusCode, data } = res;
+      console.warn(statusCode, data);
+      if (statusCode == 200 || statusCode == 201) {
+        setItems(data.data)
+      }
+       // AsyncStorage.setItem('wallet', JSON.stringify(res.data));
+        // this.setState({
+        //   wallet: res.data,
+        //   loading: false
+        // })
+        // removeBank(res.data.bank_accounts)
 
-            });
-    };
+      })
+      .catch(error => {
+        alert(error.message);
+       
+      }).finally(()=>{
+        dispatch(HIDE_LOADER())
+      });
+
+
+  };
 
     const processResponse = (response) => {
         const statusCode = response.status;
@@ -89,6 +103,14 @@ const Beneficiary = () => {
     }
 
 
+    const renderAddBeneficiary=()=>{
+            return (<AddBeneficiary onAdd={()=>onAdd()} onClose={()=>setShowAddBeneficiary(false)} />)
+    }
+
+   const onAdd=()=>{
+    setShowAddBeneficiary(false)
+    getBeneficiaryRequest()
+    }
 
     const renderAlertBody1 = () => {
         return (
@@ -176,7 +198,7 @@ const Beneficiary = () => {
     const renderResuts = (data) => {
         Moment.locale('en');
         return data.map((item) => (
-            <TransactionItem item={item} isdebit={item.debit_wallet_id == wallet.id} />
+            <BeneficiaryItem item={item}/>
         ))
 
     }
@@ -203,8 +225,16 @@ const Beneficiary = () => {
             <View style={styles.body}>
                 <View style={{ flexDirection: 'row', height: 60, paddingLeft: 20, marginTop: 30, width: Dimensions.get('window').width, backgroundColor: lightTheme.PRIMARY_COLOR }}>
 
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ justifyContent: 'center', alignItems: 'center', }}>
+                        <Icon
+                            name="arrow-back"
+                            size={30}
+                            type='ionicons'
+                            color={color.primary_color}
+                        />
+                    </TouchableOpacity>
                     <View style={{ justifyContent: 'center', flex: 1, }}>
-                        <Text style={styles.title}>Transactions</Text>
+                        <Text style={styles.title}>Beneficiary</Text>
                     </View>
                     <TouchableOpacity onPress={() => getWalletTransactionRequest()} style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
                         <Icon
@@ -216,61 +246,24 @@ const Beneficiary = () => {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.mainContent}>
-                    <View style={{ marginTop: 20, flexDirection: 'row', marginHorizontal: 20 }}>
-                        <View style={{ flexDirection: 'row', flex: 1, }}>
-
-                            <TouchableOpacity onPress={() => [setShowAlert(true), setAlert({ height: 350, type: 1 })]} style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
-                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Type</Text>
-                                <Icon
-                                    name="chevron-down"
-                                    size={20}
-                                    type='material-community'
-                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => [setShowAlert(true), setAlert({ height: 500, type: 2 })]} style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
-                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Date</Text>
-                                <Icon
-                                    name="chevron-down"
-                                    size={20}
-                                    type='material-community'
-                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={{ flex: 1, borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
-                                <Text style={{ color: lightTheme.PRIMARY_INACTIVE_COLOR, fontSize: 12, marginVertical: 4 }}>Sort By</Text>
-                                <Icon
-                                    name="chevron-down"
-                                    size={20}
-                                    type='material-community'
-                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
-                                />
-                            </TouchableOpacity>
-
-
-                        </View>
-
-                        <View style={{ width: 1, backgroundColor: lightTheme.INACTIVE_COLOR, marginHorizontal: 10 }} />
-
-                        <View style={{}}>
-
-                            <TouchableOpacity style={{ borderRadius: 15, borderColor: lightTheme.INACTIVE_COLOR, borderWidth: 0.5, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 10, padding: 5, }}>
-
-                                <Icon
-                                    name="search1"
-                                    size={20}
-                                    type='antdesign'
-                                    color={lightTheme.PRIMARY_INACTIVE_COLOR}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                  
                     <View style={{ marginTop: 20 }}>
                         {renderResuts(items)}
                     </View>
                 </View>
             </View>
-            {showAlert ? renderAlert() : null}
+            {showAddBeneficiary ? renderAddBeneficiary() : 
+            
+            <TouchableOpacity style={styles.fab} onPress={() => setShowAddBeneficiary(true)}>
+            <Icon
+                active
+                name="plus"
+                type='antdesign'
+                color='#fff'
+                size={25}
+            />
+        </TouchableOpacity>}
+           
         </View>
     );
 }
@@ -416,7 +409,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
 
-    }
+    },
+    fab: {
+        height: 60,
+        width: 60,
+        borderRadius: 200,
+        position: 'absolute',
+        bottom:  PixelRatio.get() === 3? 90:60,
+        right: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: lightTheme.PRIMARY_COLOR,
+    },
 
 });
 

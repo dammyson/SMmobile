@@ -76,7 +76,7 @@ const Register = () => {
         const { statusCode, data } = res;
         console.warn(data);
 
-        if (statusCode === 200) {
+        if (statusCode === 201) {
           storeToken(data.token.toString())
           storeUser(JSON.stringify(data.data))
           storeType(data.data.roles[0].name.toString())
@@ -124,7 +124,7 @@ const Register = () => {
     fetch(baseUrl() + '/otp/generate', {
       method: 'POST', headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+         Accept: 'application/json',
       }, body: formData,
     })
       .then(processResponse)

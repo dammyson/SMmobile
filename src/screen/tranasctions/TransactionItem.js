@@ -8,7 +8,7 @@ import { font } from '../../constants';
 import { Icon } from 'react-native-elements'
 
 const TransactionItem = ({ item, selectTransaction, isdebit }) => {
-    console.warn(isdebit);
+    // console.warn(item, selectTransaction, isdebit);
     return (
         <View style={{ height: 70, paddingHorizontal: 20, justifyContent: 'center', borderTopWidth: 0.3, borderTopColor: '#BFBFBF' }}>
             <TouchableOpacity onPress={() => selectTransaction(item)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, marginTop: 5 }}>
@@ -26,7 +26,13 @@ const TransactionItem = ({ item, selectTransaction, isdebit }) => {
                     <View style={{ flex: 1 }}>
 
                         <View style={{}}>
-                            <Text style={{ fontFamily: font.SEMI_BOLD, color: '#2E2E2E', fontSize: 14, opacity: 0.8, }}>{item.credit_user.first_name} {item.credit_user.last_name}</Text>
+                            {item.type == "bank" ?
+
+                                <Text style={{ fontFamily: font.SEMI_BOLD, color: '#2E2E2E', fontSize: 14, opacity: 0.8, }}>{item.credit_user.account_name}</Text>
+                                :
+                                <Text style={{ fontFamily: font.SEMI_BOLD, color: '#2E2E2E', fontSize: 14, opacity: 0.8, }}>{item.credit_user.first_name} {item.credit_user.last_name}</Text>
+                            }
+
                         </View>
                         <Text style={{ fontFamily: 'Poppins-Medium', color: '#BFBFBF', fontSize: 10, }}>{Moment(item.created_at).format('llll')} </Text>
 
@@ -34,7 +40,7 @@ const TransactionItem = ({ item, selectTransaction, isdebit }) => {
 
                     <View style={{ marginRight: 25 }}>
                         <Text style={{ fontFamily: font.SEMI_BOLD, color: '#2D2C71', fontSize: 14, }}>₦{item.amount} </Text>
-                        {item.status == 'success' || item.status == 'Completed' ?
+                        {item.status == 'success' || item.status == 'Completed' || item.status == 'Created' ?
                             <Text style={{ fontFamily: font.LIGHT, color: 'green', fontWeight: '600', fontSize: 10, }}>{item.status} </Text>
                             :
                             <Text style={{ fontFamily: font.LIGHT, color: 'red', fontWeight: '600', fontSize: 10, }}>{item.status} </Text>

@@ -206,6 +206,8 @@ const Home = ({ }) => {
             navigation.navigate('user_top')
         }else if (item.navigationUrl == 'bank') {
             navigation.navigate('transfer', {data:data})
+        }else if (item.navigationUrl == 'beneficiary') {
+            navigation.navigate('beneficiary', {data:data})
         }
 
     }
@@ -329,24 +331,24 @@ const menuItems = [
         active: true,
         empty: false
     },
+    // {
+    //     title: 'Pay Bills',
+    //     bg: menufour,
+    //     navigationUrl: 'Hospital',
+    //     active: true,
+    //     empty: false
+    // },
     {
-        title: 'Pay Bills',
-        bg: menufour,
-        navigationUrl: 'Hospital',
+        title: 'Manage Beneficiaries',
+        bg: menufive,
+        navigationUrl: 'beneficiary',
         active: true,
         empty: false
     },
     {
         title: 'Manage Beneficiaries',
         bg: menufive,
-        navigationUrl: 'Hospital',
-        active: true,
-        empty: false
-    },
-    {
-        title: 'Manage Beneficiaries',
-        bg: menufive,
-        navigationUrl: 'Hospital',
+        navigationUrl: 'beneficiary',
         active: true,
         empty: true
     },

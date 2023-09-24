@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, StyleSheet, Dimensions, View, Text, TouchableOpacity } from 'react-native';
+import { Alert, StyleSheet, Dimensions, View, Text, TouchableOpacity,Keyboard } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Icon, } from 'react-native-elements'
 import ActivityIndicator from './ActivityIndicator'
@@ -18,6 +18,7 @@ export default class Pin extends React.Component {
     }
 
     async componentWillMount() {
+        Keyboard.dismiss()
         this.setState({
             auth: await getToken(),
         })
@@ -150,7 +151,9 @@ export default class Pin extends React.Component {
         })
             .then(processResponse)
             .then(res => {
+
                 const { statusCode, data } = res;
+                console.warn(statusCode, data)
                 if (statusCode == 201) {
                     this.setState({ loading: false })
                     onSuccess(pin)

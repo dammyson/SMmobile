@@ -10,8 +10,8 @@ import { PulseIndicator } from 'react-native-indicators';
 import Modal, { SlideAnimation, ModalContent } from 'react-native-modals';
 import RNPickerSelect from 'react-native-picker-select';
 import ActivityIndicator from '../../component/view/ActivityIndicator'
-import SelectBank from '../../component/view/SelectBankAccounts'
-import AddBank from '../../component/view/AddBeneficiary'
+import SelectBank from '../../component/view/SelectBank'
+import AddBank from '../../component/view/AddBank'
 import Pin from '../../component/view/Pin';
 import Success from '../../component/view/Success'
 import Error from '../../component/view/Error'
@@ -47,7 +47,9 @@ const Transfer = () => {
     const [failed, setFailed] = useState(false);
     const [done, setDone] = useState(false);
     const [selectedBankDetails, setSelectedBankDetails] = useState(null);
+    const [bankList, setBankList] = useState([]);
     const [payVisible, setPayVisible] = useState(false);
+    const [viewBalance, setViewBalance] = useState(false);
     const [data, setData] = useState('');
 
     const [balance, setBalance] = useState(0);
@@ -80,6 +82,17 @@ const Transfer = () => {
         }, 500);
     }
 
+    const toggleSwitch = () => {
+        if (isEnabled) {
+            updateWalletPref(null)
+            setIsEnabled(false)
+        } else {
+            updateWalletPref('Instant')
+            setIsEnabled(true)
+        }
+
+    }
+
 
     const loadData = async () => {
         const wallet = JSON.parse(await getWallet())
@@ -92,6 +105,19 @@ const Transfer = () => {
         setBalance(wallet.balance.data.currentBalance)
         // this.setState({
 
+        //     wallet: wallet,
+        //     balance: wallet.balance,
+        //     bank_list: wallet.bank_accounts,
+        //     role: await getUserType()
+        // })
+        // if (wallet.bank_accounts.length > 0) {
+        //     const bank_accounts = wallet.bank_accounts;
+        //     for (let i = 0; i < bank_accounts.length; i++) {
+        //         if (!bank_accounts[i].is_virtual_account) {
+        //             this.setState({ selected_bank_details: bank_accounts[i] })
+        //         }
+        //     }
+        // }
 
     }
 
@@ -108,16 +134,116 @@ const Transfer = () => {
         setOption(data.value)
     };
 
+    const getWalletRequest = () => {
+        dispatch(SHOW_LOADER("Getting wallet"))
+
+        fetch(URL.urltwo + '/wallet', {
+            method: 'GET', headers: {
+                Accept: 'application/json',
+                'Authorization': 'Bearer ' + auth,
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(res => res.json())
+            .then(res => {
+                AsyncStorage.setItem('wallet', JSON.stringify(res.data));
+
+                setBalance(res.data.balance.data.currentBalance)
+                setPoint(res.data.points)
+                setLedgerBalance(res.data.balance.data.availableBalance)
+                setWallet(res.data)
+
+
+            })
+            .catch(error => {
+                alert(error.message);
+                //hide Loading
+            });
+
+
+    };
+
     const handleSuccessPin = (code) => {
         console.warn(option)
         setPin(false)
         if (option == 1) {
-            processSendToBankAccount(code)
+            processMyBankTransfer(code)
         } else if (option == 2) {
             processIDTransfer(code)
+        } else if (option == 3) {
+            processOtherBankTransfer(code)
         }
 
 
+    }
+
+    const processMyBankTransfer = () => {
+        console.warn("my bank")
+
+        // if (accountNumber == "" || accountName == "" || bankCode == "" || amount == "") {
+        //     Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
+        //     return
+        // } else {
+
+        // }
+
+        //show loader
+        var action_url = '/transfers'
+
+        var formData = JSON.stringify({
+            sender_wallet_id: wallet.id,
+            amount: Number(amount),
+            pin: code,
+            narration: "internal",
+            islocal: false,
+            //account_number: accountNumber,
+            //bank_code: bankCode
+            account_number: "8013171401",
+            bank_code: "999240"
+
+        })
+
+        console.warn(formData)
+
+        dispatch(SHOW_LOADER("Sending to bank account"))
+
+        fetch(baseUrl() + action_url, {
+            method: 'POST', headers: {
+                Accept: 'application/json',
+                'Authorization': 'Bearer ' + auth,
+                'Content-Type': 'application/json',
+            }, body: formData,
+        })
+            .then(processResponse)
+            .then(res => {
+                dispatch(HIDE_LOADER())
+                const { statusCode, data } = res;
+                console.warn(statusCode, data);
+                //hide loader
+                if (statusCode == 200 || statusCode == 201) {
+                    setDone(true)
+                    setOperationMessage(data.message)
+                } else if (statusCode == 401) {
+                    setFailed(true)
+                    setOperationMessage(data.message)
+                } else if (statusCode == 422) {
+                    setFailed(true)
+                    setOperationMessage(data.message)
+                } else if (statusCode == 412) {
+                    setFailed(true)
+                    setOperationMessage(data.message)
+                } else {
+                    setFailed(true)
+                    setOperationMessage('Something went wrong please try again later')
+
+                }
+
+            })
+            .catch((error) => {
+                alert(error.message);
+                setFailed(true)
+                setOperationMessage('Something went wrong please try again later')
+            });
     }
 
     const getDetailRequest = () => {
@@ -231,12 +357,7 @@ const Transfer = () => {
 
     const selectedBank = (v) => {
         setSelectBank(false)
-       
-        setBankCode(v.bank_code)
-        setBankName(v.bank_name)
-
-        setAccountNumber(v.account_number)
-        setAccountName(v.account_name)
+        console.warn(v);
         setSelectedBankDetails(v)
 
     }
@@ -245,12 +366,10 @@ const Transfer = () => {
         console.warn(v);
         setBankCode(v.bankCode)
         setBankName(v.name)
-        setAccountNumber("")
         setViewBanks(false)
     }
 
     const getBeneficiaryProcess = (text) => {
-        setAccountNumber(text)
         setAccountName('')
         if (text.length == 10 && bankCode != "") {
             bRequest(bankCode, text, auth)
@@ -262,14 +381,17 @@ const Transfer = () => {
     const bRequest = (bank_code, account_number_entered, token) => {
         console.warn()
         setBLoading(true)
-       
+        setAccountNumber(account_number_entered)
+
+        // const formData = {
+        //     account_number: account_number_entered,
+        //     bank_code: bank_code
+        // }
 
         const formData = {
-            account_number: account_number_entered,
-            bank_code: bank_code
+            account_number: "8013171401",
+            bank_code: "999240"
         }
-
-
         console.warn(formData)
         fetch(baseUrl() + '/bank', {
             method: 'POST', headers: {
@@ -285,7 +407,6 @@ const Transfer = () => {
                 if (res.status) {
                     setBLoading(false)
                     setAccountName(res.data.data.accountName)
-                    setAccountNumber(res.data.data.accountNumber)
 
                 } else {
                     setBLoading(false)
@@ -302,7 +423,7 @@ const Transfer = () => {
 
 
 
-    const processSendToBankAccount = (code) => {
+    const processOtherBankTransfer = (code) => {
 
         if (accountNumber == "" || accountName == "" || bankCode == "" || amount == "") {
             Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
@@ -320,10 +441,10 @@ const Transfer = () => {
             pin: code,
             narration: "internal",
             islocal: false,
-            account_number: accountNumber,
-            bank_code: bankCode,
-            account_name:accountName,
-            bank_name:bankName
+            //account_number: accountNumber,
+            //bank_code: bankCode
+            account_number: "8013171401",
+            bank_code: "999240"
 
         })
         console.warn(action_url)
@@ -370,6 +491,59 @@ const Transfer = () => {
             });
 
     }
+
+    const updateWalletPref = async (auth) => {
+
+        var Dbody = JSON.stringify({
+            auto_withdrawal: auth,
+        });
+        //show loader
+        fetch(URL.urltwo + '/wallet/' + wallet.id + '/preferences', {
+            method: 'POST', headers: {
+                Accept: 'application/json',
+                'Authorization': 'Bearer ' + await getToken(),
+                'Content-Type': 'application/json',
+            }, body: Dbody,
+        })
+            .then(processResponse)
+            .then(res => {
+                //hide loader
+                const { statusCode, data } = res;
+                console.warn(statusCode, data);
+                if (statusCode == 200) {
+                    if (data.error) {
+
+                    } else {
+                        Toast.show({
+                            text: 'Wallet Prefrence updated!',
+                            position: 'top',
+                            type: 'success',
+                            buttonText: 'Dismiss',
+                            duration: 1500
+                        });
+                        if (data.data.auto_withdrawal == 'Instant') {
+                            AsyncStorage.setItem('wallet_pre', data.data.auto_withdrawal);
+                            setIsEnabled(true)
+
+                        } else {
+                            AsyncStorage.setItem('wallet_pre', 'null');
+                            setIsEnabled(false)
+                        }
+
+                    }
+                }
+
+            })
+            .catch(error => {
+                alert(error.message);
+                // hide loader
+            });
+
+
+    };
+
+
+
 
 
     const _transfer = () => {
@@ -477,6 +651,20 @@ const Transfer = () => {
         )
     }
 
+    // const handAddBank = (data) => {
+
+    //     if (data.bank_accounts.length > 0) {
+
+    //         setBankList(data.bank_accounts)
+    //         const bank_accounts = data.bank_accounts;
+    //         for (let i = 0; i < bank_accounts.length; i++) {
+    //             if (!bank_accounts[i].is_virtual_account) {
+    //                 setSelectedBankDetails(bank_accounts[i])
+    //             }
+    //         }
+    //     }
+    // }
+
     const _addBank = () => {
         return (
             <AddBank
@@ -519,6 +707,87 @@ const Transfer = () => {
     }
 
 
+    const _myBankAccount = () => {
+
+        return (
+            <View style={{ marginTop: 15, marginBottom: 99 }}>
+
+
+                {selectedBankDetails !== null ?
+                    <>
+                        <View style={[styles.textInputContainer]}>
+                            <View style={[styles.input, { height: 80 }]}>
+                                <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }} >
+                                    <View style={{ justifyContent: 'center', flex: 1, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
+                                        <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selectedBankDetails.bank_name} </Text>
+                                        <Text style={{ fontSize: 10, marginTop: 10, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>{selectedBankDetails.account_number} </Text>
+                                        <Text style={{ fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>{selectedBankDetails.account_name} </Text>
+                                    </View>
+                                    <View style={{ justifyContent: 'center', marginRight: 15, }} >
+                                        <Image
+                                            style={{ height: 50, width: 80, resizeMode: 'contain' }}
+                                            source={require('../../assets/bank.png')}
+                                        />
+                                    </View>
+
+
+
+                                </View>
+                            </View>
+                        </View>
+
+                        <View style={{ justifyContent: 'center', flexDirection: 'row', marginHorizontal: 25 }} >
+                            <View style={{ justifyContent: 'center', flex: 2, marginRight: 15, alignItems: 'flex-start', marginVertical: 15 }} >
+                                <Text style={{ fontSize: 14, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}>Auto Withdraw </Text>
+                                <Text style={{ fontSize: 12, marginTop: 5, color: '#3E3E3E', fontFamily: 'Poppins-Regurlar', marginRight: 10 }}>Transfer your money to
+                                    your Bank automatically.</Text>
+
+                            </View>
+                            <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center', }} >
+                                <View style={{ backgroundColor: '#D2D1F2', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }} >
+                                    <Switch
+                                        trackColor={{ false: '#D2D1F2', true: '#D2D1F2' }}
+                                        thumbColor={isEnabled ? '#4C46E9' : "#f4f3f4"}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={() => this.toggleSwitch()}
+                                        value={isEnabled}
+                                    />
+                                </View>
+                            </View>
+                        </View>
+                    </>
+                    :
+                    <View style={{ marginLeft: 20, flexDirection: 'row', marginBottom: 20 }} >
+                        <TouchableOpacity onPress={() => setAddBank(true)} style={{ marginLeft: 20, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
+                            <Icon
+                                active
+                                name="plus"
+                                type='entypo'
+                                color='#2D2C71'
+                                size={20}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setSelectBank(true)} style={{ marginLeft: 30, height: 60, width: 70, borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D5D4E2' }} >
+                            <FontAwesome5
+
+                                name="hand-point-up"
+                                color='#2D2C71'
+                                size={25}
+                            />
+                        </TouchableOpacity>
+                    </View>}
+
+                <Text style={{ marginLeft: 20, marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>₦25 is charged for this Bank transfer. You can only transfer ₦5000 at a time.   </Text>
+
+                <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={[styles.buttonContainer, { marginBottom: 9 }]} block iconLeft>
+                    <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => setPin(true)} >
+                        <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Transfer </Text>
+                    </TouchableOpacity>
+                </LinearGradient>
+            </View>
+        )
+    }
+
 
     const sendToSMWallet = () => {
         return (
@@ -557,12 +826,9 @@ const Transfer = () => {
 
     const SendToBankAccount = () => {
         return (
-            <View style={{ marginTop: 5, marginBottom: 20 }}>
-                <View style={{ marginLeft: 20, flexDirection: 'row'}} >
-                    <TouchableOpacity onPress={() => setSelectBank(true)} >
-                    <Text style={{ marginRight: 20, marginTop: 7, fontSize: 12, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>Select from beneficiary  </Text>
-                    </TouchableOpacity>
-                  
+            <View style={{ marginTop: 15, marginBottom: 20 }}>
+                <View style={{ marginLeft: 20, flexDirection: 'row', backgroundColor: 'red' }} >
+                    <Text style={{ marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>Select from beneficiary  </Text>
                 </View>
                 <View style={styles.textInputContainer}>
                     <Text style={styles.actionbutton}>Bank   </Text>
@@ -577,7 +843,6 @@ const Transfer = () => {
                     <View style={styles.inputtwo}>
                         <TextInput
                             placeholder=""
-                            value={accountNumber}
                             placeholderTextColor='#3E3E3E'
                             returnKeyType="next"
                             keyboardType="numeric"
@@ -602,7 +867,7 @@ const Transfer = () => {
                         </View>
                     </View>
                 </View>
-                {/* <Text style={{ marginLeft: 20, marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>₦25 is charged for this Bank transfer. You can only transfer ₦5000 at a time.   </Text> */}
+                <Text style={{ marginLeft: 20, marginRight: 20, marginTop: 7, opacity: 0.5, fontSize: 11, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>₦25 is charged for this Bank transfer. You can only transfer ₦5000 at a time.   </Text>
 
                 <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={styles.buttonContainer} block iconLeft>
                     <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => processThirdBank()}  >
@@ -774,8 +1039,10 @@ const Transfer = () => {
 
 export default Transfer
 
+
+
 const destinations = [
-    { label: 'Send To Bank Account', value: 1 },
+    { label: 'Bank Account', value: 1 },
     { label: 'Sendmonny Wallets', value: 2 },
 ]
 const styles = StyleSheet.create({
@@ -914,6 +1181,24 @@ const styles = StyleSheet.create({
         marginRight: 25,
         marginTop: 30,
         borderRadius: 5,
+    },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+    inputIOS: {
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        color: 'black',
+        fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold',
+        paddingRight: 30, // to ensure the text is never behind the icon
+    },
+    inputAndroid: {
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        color: 'black',
+        fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold',
+        paddingRight: 30,
+        // to ensure the text is never behind the icon
     },
 });
 

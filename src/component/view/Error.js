@@ -66,6 +66,9 @@ export default class Error extends React.Component {
  Error;
 const styles = StyleSheet.create({
     backgroundImage: {
+        position:'absolute',
+        top:0,
+        left:0,
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height,
     },

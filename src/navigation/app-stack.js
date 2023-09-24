@@ -37,7 +37,7 @@ import MerchantsQRSetting from '../screen/merchant/QRCodeSetting'
 
 import Wallet from '../screen/activities/Clone';
 import BusinessWallet from '../screen/merchant/BusinessWallet';
-import UserTop from '../screen/activities/UserTop';
+import UserTop from '../screen/topUp/UserTop';
 import MTopUp from '../screen/merchant/MTopUp';
 import ComingSoon from '../screen/activities/ComingSoon';
 import MSoon from '../screen/merchant/Msoon';
@@ -87,6 +87,8 @@ import Limits from '../screen/giveAway/Limits';
 import WalletHome from '../screen/wallet/Home';
 import ForgetPassword from '../screen/user/ForgetPassword';
 import ChangePassword from '../screen/user/ChangePassword';
+import Transaction from '../screen/tranasctions/Transaction';
+import Beneficiary from '../screen/Beneficiary/Beneficiary';
 
 /*
 */
@@ -120,7 +122,7 @@ class AppStack extends Component {
               headerStyle: { backgroundColor: '#7862ff' }, 
               headerShown: false,
              }}
-             initialRouteName="transfer">
+             initialRouteName="Splash">
 
             <Stack.Screen name="Splash" component={Splash}  />
             <Stack.Screen name="Intro" component={Intro}  />
@@ -175,6 +177,7 @@ class AppStack extends Component {
               <Stack.Screen name="ongoing" component={Ongoing}   />
               <Stack.Screen name="donationlist" component={DonationList}   />
               <Stack.Screen name="transfer" component={Transfer}   />
+              <Stack.Screen name="beneficiary" component={Beneficiary}   />
               <Stack.Screen name="virtual" component={Virtual}   />
 
               <Stack.Screen name="top_bank_d" component={TopBankDetails}   />

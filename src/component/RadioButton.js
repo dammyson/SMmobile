@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Value } from 'react-native-reanimated';
 
-const RadioButton = ({ checked, onPress }) => {
+const RadioButton = ({ checked, value, onPress }) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.radioCircle}
-                onPress={() => { onPress() }}>
-                {checked && <View style={styles.selectedRb} />}
+                onPress={() => { onPress(value) }}>
+                {checked===value && <View style={styles.selectedRb} />}
             </TouchableOpacity>
         </View>
     )

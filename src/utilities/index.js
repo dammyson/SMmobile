@@ -1,8 +1,9 @@
 import { AsyncStorage } from 'react-native';
-
+const env = "PROD"
+const authHost = env == 'ENV' ? 'http://3.13.232.218/api' : 'http://18.218.125.127/api'
 
 export const baseUrl = () => {
-  return 'http://3.13.232.218/api';
+  return authHost;
 };
 
 export const storeToken = async (selectedValue) => {

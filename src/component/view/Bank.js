@@ -17,10 +17,7 @@ import { lightTheme } from '../../theme/colors';
 
 const Bank = ({ onClose, onSelect }) => {
 
-  const [merchant, setMerchant] = useState('ay345');
-  const [items, setItems] = useState([]);
-  const [visible, setVisible] = useState(false);
-  const [viewBalance, setViewBalance] = useState(false);
+
   const [loading, setLoading] = useState(true);
  
   const [bankId, setBankId] = useState('');
@@ -49,7 +46,9 @@ const Bank = ({ onClose, onSelect }) => {
         console.warn(res);
         setLoading(false)
         if (res.status) {
-          sortBank(res.data.data);
+          setArrayholder(res.data.data)
+          setBankData(res.data.data)
+          //sortBank(res.data.data);
          // setBankData(res.data.data);
         
 
