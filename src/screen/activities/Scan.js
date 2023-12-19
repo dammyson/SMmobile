@@ -93,11 +93,16 @@ async componentDidMount() {
       .then(res => res.json())
       .then(res => {
         console.warn(res);
-        this.setState({
-          payment_detail: res.data,
-          loading: false,
-          visible: true
-        })
+        if(res.message == "Unable to get user details"){
+          
+        }else{
+          this.setState({
+            payment_detail: res.data,
+            loading: false,
+            visible: true
+          })
+        }
+     
 
       })
       .catch(error => {
@@ -167,7 +172,8 @@ async componentDidMount() {
         })
 
         if (statusCode == 200) {
-          this.setState({ view_success: true, operation_message: data.message })
+          let msg = `Your transfer of ₦${ammount} to ${payment_detail.first_name} ${payment_detail.last_name} is on its way`
+          this.setState({ view_success: true, operation_message: msg })
         } else if (statusCode == 401) {
           this.setState({ view_error: true, operation_message: data.message })
         } else if (statusCode == 422) {

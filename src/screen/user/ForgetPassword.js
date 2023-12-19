@@ -229,7 +229,7 @@ const ForgetPassword = () => {
 
 
           <TouchableOpacity style={styles.buttonContainer} onPress={() => sendOtpRequest()}  >
-            <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Sign up</Text>
+            <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Proceed</Text>
           </TouchableOpacity>
 
           {/* <TouchableOpacity style={styles.buttonContainer} onPress={() => registrationRequest()}  >

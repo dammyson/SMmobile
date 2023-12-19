@@ -201,7 +201,8 @@ const Transfer = () => {
 
                 if (statusCode == 200) {
                     setDone(true)
-                    setOperationMessage(data.message)
+                    let msg = `Your transfer of ₦${amount} to ${paymentDetail.first_name} ${paymentDetail.last_name} is on its way`
+                    setOperationMessage(msg)
                 } else if (statusCode == 401) {
                     setFailed(true)
                     setOperationMessage(data.message)
@@ -346,7 +347,8 @@ const Transfer = () => {
                 //hide loader
                 if (statusCode == 200 || statusCode == 201) {
                     setDone(true)
-                    setOperationMessage(data.message)
+                    let msg = `Your transfer of ₦${amount} to ${accountName} is on its way`
+                    setOperationMessage(msg)
                 } else if (statusCode == 401) {
                     setFailed(true)
                     setOperationMessage(data.message)
@@ -559,8 +561,8 @@ const Transfer = () => {
         return (
             <View style={{ marginTop: 5, marginBottom: 20 }}>
                 <View style={{ marginLeft: 20, flexDirection: 'row'}} >
-                    <TouchableOpacity onPress={() => setSelectBank(true)} >
-                    <Text style={{ marginRight: 20, marginTop: 7, fontSize: 12, color: '#0F0E43', textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>Select from beneficiary  </Text>
+                    <TouchableOpacity style={{alignItems: 'flex-end',  width: Dimensions.get('window').width-25}} onPress={() => setSelectBank(true)} >
+                    <Text style={{ marginRight: 20, marginTop: 7, fontSize: 12, color: lightTheme.PRIMARY_COLOR, textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>Select beneficiary</Text>
                     </TouchableOpacity>
                   
                 </View>

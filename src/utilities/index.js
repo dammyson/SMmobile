@@ -1,6 +1,6 @@
 import { AsyncStorage } from 'react-native';
 const env = "PROD"
-const authHost = env == 'ENV' ? 'http://3.13.232.218/api' : 'http://18.218.125.127/api'
+const authHost = env == 'ENV' ? 'https://sendmonny.ng/api' : 'https://sendmonny.ng/api'
 
 export const baseUrl = () => {
   return authHost;

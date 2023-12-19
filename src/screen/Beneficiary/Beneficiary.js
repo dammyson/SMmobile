@@ -236,7 +236,7 @@ dispatch(SHOW_LOADER("getting beneficiaries"))
                     <View style={{ justifyContent: 'center', flex: 1, }}>
                         <Text style={styles.title}>Beneficiary</Text>
                     </View>
-                    <TouchableOpacity onPress={() => getWalletTransactionRequest()} style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
+                    <TouchableOpacity onPress={() => getBeneficiaryRequest()} style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
                         <Icon
                             name="reload"
                             size={20}

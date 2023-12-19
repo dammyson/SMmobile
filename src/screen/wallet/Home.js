@@ -58,7 +58,7 @@ const Home = ({ }) => {
         console.warn("down");
         dispatch(SHOW_LOADER("Getting wallet"))
 
-        fetch(baseUrl() + '/wallets', {
+      return fetch(baseUrl() + '/wallets', {
             method: 'GET', headers: {
                 Accept: 'application/json',
                 'Authorization': 'Bearer ' + await getToken(),
@@ -119,10 +119,16 @@ const Home = ({ }) => {
         navigation.navigate('user_top')
     }
 
+//    const _refresh=()=> {
+//         return new Promise((resolve) => {
+//           setTimeout(()=>{resolve()}, 2000)
+//         });
+//       }
 
     const _refresh = () => {
         return new Promise((resolve) => {
             getWalletRequest()
+            setTimeout(()=>{resolve()}, 2000)
         });
     }
 
@@ -194,11 +200,7 @@ const Home = ({ }) => {
 
 
 
-    const goToScan = async () => {
-        navigation.navigate('scan', { operation: 'pay' })
-    }
-    //initialRouteName="withdrawal"
-    //
+
     const itemClick = (item) => {
         if (item.navigationUrl == 'pay') {
             navigation.navigate('scan', { operation: 'pay' })
@@ -259,7 +261,7 @@ const Home = ({ }) => {
                         <View style={styles.avarterContainer}>
 
                             <View style={{ flexDirection: 'row', }}>
-                                <TouchableOpacity onPress={() => setShowBalance(false)} style={{ flexDirection: 'row', marginLeft: 20, alignItems: 'center', justifyContent: "center" }} >
+                                <TouchableOpacity style={{ flexDirection: 'row', marginLeft: 20, alignItems: 'center', justifyContent: "center" }} >
                                     <Icon
                                         active
                                         name="user-circle-o"

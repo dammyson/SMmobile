@@ -49,6 +49,7 @@ const Transaction = () => {
 
 
     useEffect(() => {
+       // dispatch(HIDE_LOADER())
         setWalletValue()
         getWalletTransactionRequest()
     }, []);
@@ -60,8 +61,8 @@ const Transaction = () => {
     }
 
     const getWalletTransactionRequest = async () => {
-        //  dispatch(SHOW_LOADER("Get Tentative"))
-        fetch(baseUrl() + '/transactions/', {
+        dispatch(SHOW_LOADER("Get transactions"))
+        fetch(baseUrl() + '/transactions', {
             method: 'GET', headers: {
                 Accept: 'application/json',
                 'Authorization': 'Bearer ' + await getToken(),
@@ -328,7 +329,10 @@ const Transaction = () => {
 
                     </View>
                     <View style={{ marginTop: 20 }}>
+                        <ScrollView>
                         {renderResuts(fItems)}
+                        </ScrollView>
+                       
                     </View>
                 </View>
             </View>

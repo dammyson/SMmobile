@@ -79,6 +79,7 @@ class AddPin extends Component {
     })
       .then(processResponse)
       .then(res => {
+        console.warn(res);
         this.props.hidLoading()
         const { statusCode, data } = res;
        

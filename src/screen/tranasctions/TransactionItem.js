@@ -8,7 +8,7 @@ import { font } from '../../constants';
 import { Icon } from 'react-native-elements'
 
 const TransactionItem = ({ item, selectTransaction, isdebit }) => {
-    // console.warn(item, selectTransaction, isdebit);
+     console.warn(item, selectTransaction, isdebit);
     return (
         <View style={{ height: 70, paddingHorizontal: 20, justifyContent: 'center', borderTopWidth: 0.3, borderTopColor: '#BFBFBF' }}>
             <TouchableOpacity onPress={() => selectTransaction(item)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, marginTop: 5 }}>

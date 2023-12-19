@@ -53,6 +53,7 @@
 		93C6370F0D7D4CE5A8C3DE61 /* Feather.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5DD279CF3BBB4DDAB790F685 /* Feather.ttf */; };
 		9546747FBB134B779F08A3F9 /* Poppins-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 147DC62CF160454585B674EB /* Poppins-ExtraBoldItalic.ttf */; };
 		9665E92B10F2407F9BE391C1 /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 87C8B7AECF154C7B8BD5F7E1 /* Poppins-Black.ttf */; };
+		967B870A8C941C8916CA6F40 /* libPods-Sendmonny.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EF0DE42CE10401BC5E5C2D8C /* libPods-Sendmonny.a */; };
 		97EC62210FC846198DB2535A /* Roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BA42C572DF644A839E4438CE /* Roboto.ttf */; };
 		9A08167CF648473FBF3DE7E9 /* Poppins-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7358D10C44874D5C941AFAAA /* Poppins-MediumItalic.ttf */; };
 		9ECE8D782BCA44D6A88737DD /* Montserrat-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5A3EE2536DED4F24999F7303 /* Montserrat-Regular.ttf */; };
@@ -223,6 +224,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				967B870A8C941C8916CA6F40 /* libPods-Sendmonny.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1018,7 +1020,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1046,7 +1048,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

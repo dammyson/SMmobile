@@ -116,7 +116,7 @@ const Receipt = ({ details, wallet, balance, onClose, onDownload, onShare }) => 
 
                             <View style={{ marginTop: 15 }}>
                                 <Text style={{ fontSize: 14, color: '#2D2C71', textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>Transaction Amount  </Text>
-                                <Text style={{ fontSize: 30, color: lightTheme.PRIMARY_COLOR, textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>NGN {details.amount}</Text>
+                                <Text style={{ fontSize: 30, color: lightTheme.PRIMARY_COLOR, textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>₦ {details.amount}</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: '#2D2C71', textAlign: 'center', fontFamily: 'Poppins-Light' }}>Balance</Text>
                                     <View style={{ backgroundColor: '#2D2C71', width: 0.5, marginLeft: 6, marginRight: 6 }} />
@@ -169,6 +169,16 @@ const Receipt = ({ details, wallet, balance, onClose, onDownload, onShare }) => 
                                     <Text style={{ fontSize: 10, flex: 1, color: '#4B4B4B50', textAlign: 'left', fontFamily: 'Poppins-Regular' }}>TIME </Text>
                                     <Text style={{ fontSize: 12, flex: 1.3, color: '#3E3E3E', textAlign: 'left', fontFamily: 'Poppins-Medium' }}>{Moment(details.created_at).format('LT')}</Text>
                                 </View>
+
+
+                                {details.revenue? 
+                                <>
+                                  <View style={{ backgroundColor: '#2D2C7150', height: 0.5, marginLeft: 15, marginRight: 15, }} />
+                                 <View style={{ marginLeft: 15, marginRight: 15, marginBottom: 7, marginTop: 7, flexDirection: 'row', justifyContent: 'center' }}>
+                                 <Text style={{ fontSize: 10, flex: 1, color: '#4B4B4B50', textAlign: 'left', fontFamily: 'Poppins-Regular' }}>Charges </Text>
+                                 <Text style={{ fontSize: 12, flex: 1.3, color: '#3E3E3E', textAlign: 'left', fontFamily: 'Poppins-Medium' }}> ₦{details.revenue?.amount}</Text>
+                             </View></>: null
+                            }
                                 <View style={{ backgroundColor: '#2D2C7150', height: 0.5, marginLeft: 15, marginRight: 15, }} />
                                 <View style={{ marginLeft: 15, marginRight: 15, marginBottom: 7, marginTop: 7, flexDirection: 'row', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 10, flex: 1, color: '#4B4B4B50', textAlign: 'left', fontFamily: 'Poppins-Regular' }}>TRANSACTION ID</Text>
@@ -184,7 +194,7 @@ const Receipt = ({ details, wallet, balance, onClose, onDownload, onShare }) => 
                                 <View style={{ backgroundColor: '#2D2C7150', height: 0.5, marginLeft: 15, marginRight: 15, }} />
                                 <View style={{ marginLeft: 15, marginRight: 15, marginBottom: 7, marginTop: 7, flexDirection: 'row', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 10, flex: 1, color: '#4B4B4B50', textAlign: 'left', fontFamily: 'Poppins-Regular' }}>STATUS</Text>
-                                    <Text style={{ fontSize: 12, flex: 1.3, color: '#3E3E3E', textAlign: 'left', fontFamily: 'Poppins-Medium' }}>{details.status == 'success' ? 'Successful' : 'Failed'}</Text>
+                                    <Text style={{ fontSize: 12, flex: 1.3, color: '#3E3E3E', textAlign: 'left', fontFamily: 'Poppins-Medium' }}>{details.status == 'Completed' ? 'Successful' : 'Failed'}</Text>
                                 </View>
                             </View>
 
