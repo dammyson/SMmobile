@@ -89,6 +89,7 @@ import ForgetPassword from '../screen/user/ForgetPassword';
 import ChangePassword from '../screen/user/ChangePassword';
 import Transaction from '../screen/tranasctions/Transaction';
 import Beneficiary from '../screen/Beneficiary/Beneficiary';
+import ChangePasswordSetting from '../screen/user/ChangePasswordSetting';
 
 /*
 */
@@ -122,7 +123,7 @@ class AppStack extends Component {
               headerStyle: { backgroundColor: '#7862ff' }, 
               headerShown: false,
              }}
-             initialRouteName="Splash">
+             initialRouteName="changePasswordSetting">
 
             <Stack.Screen name="Splash" component={Splash}  />
             <Stack.Screen name="Intro" component={Intro}  />
@@ -136,6 +137,7 @@ class AppStack extends Component {
             <Stack.Screen name="changePassword" component={ChangePassword}   />
             <Stack.Screen name="addbank" component={AddBank}   />
             <Stack.Screen name="home" component={Home}   />
+            <Stack.Screen name="changePasswordSetting" component={ChangePasswordSetting}   />
 
 
             <Stack.Screen name="withdrawal" component={Withdrawal}   />

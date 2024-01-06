@@ -29,6 +29,9 @@ const Settings=()=>{
         else if (item.value == "support") {
           Linking.openURL("https://www.uis.edu/form/mobile-app-support-form");
         }
+         else if (item.value == "change") {
+            navigation.navigate('changepin');
+          }
     
       }
 
@@ -135,8 +138,8 @@ const items = [
                 value: 'change'
             },
             {
-                text: 'Recover PIN',
-                value: 'delet'
+                text: 'Change Password',
+                value: 'changp'
             }
         ]
     },

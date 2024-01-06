@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
 
 import { getFmc } from '../../component/utilities';
-import { baseUrl, storePhone, storeToken, storeType, storeUser } from '../../utilities';
+import { baseUrl, getToken, } from '../../utilities';
 import { lightTheme } from '../../theme/colors';
 import { font } from '../../constants';
 import { auth_logo } from '../../assets';
@@ -18,20 +18,18 @@ import * as Animatable from 'react-native-animatable';
 
 import Feather from 'react-native-vector-icons/Feather';
 
-const ChangePassword = ({route}) => {
-  const phone = route.params.phone;
+const ChangePasswordSetting = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
 
-
-  const [password, setPassword] = useState('')
-  const [cpassword, setCpassword] = useState('')
+  const [opassword, setOldPassword] = useState('Password')
+  const [password, setPassword] = useState('ayo1111')
+  const [cpassword, setCpassword] = useState('ayo1111')
   const [secureTextEntry, setSecureTextEntry] = useState(true)
 
   const password_field = useRef();
 
-  const [code, setCode] = useState("")
 
   const initia = async () => {
     setToken(await getFmc())
@@ -43,47 +41,43 @@ const ChangePassword = ({route}) => {
 
 
 
-  const registrationRequest = () => {
+  const registrationRequest = async() => {
     dispatch(SHOW_LOADER("Setting new passwoord"))
 
-    var phonenumber = phone;
-
     let formData = JSON.stringify({
-      phone_number: phonenumber,
-      password: password,
-      confirm_password: cpassword
+      old_password: opassword,
+      new_password: password,
+      new_password_confirmation: cpassword
     })
 
     console.warn(formData);
 
-    fetch(baseUrl() + '/password/reset', {
+    fetch(baseUrl() + '/password/update', {
       method: 'POST', headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'Authorization': 'Bearer ' +  await getToken() ,
       }, body: formData,
     })
       .then(processResponse)
       .then(res => {
+      
         dispatch(HIDE_LOADER())
         const { statusCode, data } = res;
-        console.warn(data);
-
-        if (statusCode === 200) {
-          
-          navigation.navigate('login')
-
-        } else if (statusCode === 422) {
-          Alert.alert('Validation failed', 'Check the information you provide and try again', [{ text: 'Okay' }])
+        console.warn(statusCode, data);
+        if (statusCode === 201) {
+          console.warn(statusCode, data, "THISSS");
+          //this.setState({ done: true, confirm: false })
+        
         } else {
-          Alert.alert('Operarion failed', 'Please check your phone number and retry', [{ text: 'Okay' }])
+          //this.setState({ confirm: false })
+          Alert.alert('Operation failed', data.message, [{ text: 'Okay' }])
         }
       })
       .catch((error) => {
         dispatch(HIDE_LOADER())
-        console.log("Api call error");
         console.warn(error);
         alert(error.message);
-
       });
   }
 
@@ -109,14 +103,11 @@ const ChangePassword = ({route}) => {
               name="arrowleft"
               size={30}
               type='antdesign'
-              color={lightTheme.WHITE_COLOR}
+              color={lightTheme.PRIMARY_COLOR}
             />
           </TouchableOpacity>
           <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
-            <Image
-              style={styles.logo}
-              source={auth_logo}
-            />
+          
           </View>
           <View style={{ justifyContent: 'center', width: 40, alignItems: 'center' }}></View>
         </View>
@@ -127,14 +118,64 @@ const ChangePassword = ({route}) => {
         <View style={styles.sideContentReg}>
 
           <View style={{ justifyContent: 'center', alignItems: 'center', }}>
-            <Text style={{ color: lightTheme.PRIMARY_COLOR, fontFamily: font.BOLD, fontSize: 24, marginTop: 7 }}>Forget Password</Text>
+            <Text style={{ color: lightTheme.PRIMARY_COLOR, fontFamily: font.BOLD, fontSize: 24, marginTop: 7 }}>Change Password</Text>
           </View>
 
          
 
-
           <View style={styles.textInputContainer}>
-            <Text style={styles.actionbutton}>Password </Text>
+            <Text style={styles.actionbutton}>Old Password </Text>
+            <View style={styles.input}>
+              <View style={{ justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
+                <Icon
+                  name="lock"
+                  size={22}
+                  type='antdesign'
+                  color={'#3E3E3E'}
+                />
+              </View>
+              <TextInput
+                placeholder="Enter Old Password"
+                placeholderTextColor='#3E3E3E'
+                returnKeyType="next"
+                secureTextEntry={secureTextEntry}
+                keyboardType="default"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{ flex: 1, marginLeft: 10, fontSize: 12, color: '#3E3E3E', fontFamily: 'Poppins-SemiBold', }}
+                onChangeText={text => setOldPassword(text)}
+                maxLength={11}
+                ref={password_field}
+                defaultValue={password}
+
+              />
+              <View style={{ justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setSecureTextEntry(!secureTextEntry)}
+                >
+                  {!secureTextEntry ?
+                    <Feather
+                      name="eye-off"
+                      color="grey"
+                      size={20}
+                    />
+                    :
+                    <Feather
+                      name="eye"
+                      color="grey"
+                      size={20}
+                    />
+                  }
+                </TouchableOpacity>
+              </View>
+
+
+            </View>
+
+
+          </View>
+          <View style={styles.textInputContainer}>
+            <Text style={styles.actionbutton}>New Password </Text>
             <View style={styles.input}>
               <View style={{ justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
                 <Icon
@@ -187,7 +228,7 @@ const ChangePassword = ({route}) => {
           </View>
 
           <View style={styles.textInputContainer}>
-            <Text style={styles.actionbutton}>Confirm Password</Text>
+            <Text style={styles.actionbutton}>Confirm New Password</Text>
             <View style={styles.input}>
               <View style={{ justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
                 <Icon
@@ -198,7 +239,7 @@ const ChangePassword = ({route}) => {
                 />
               </View>
               <TextInput
-                placeholder="Enter Confirm Password"
+                placeholder="Enter Confirm New Password"
                 placeholderTextColor='#3E3E3E'
                 returnKeyType="next"
                 onSubmitEditing={() => sendRegisterRequest()}
@@ -243,20 +284,6 @@ const ChangePassword = ({route}) => {
           <TouchableOpacity style={styles.buttonContainer} onPress={() => registrationRequest()}  >
             <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Continue</Text>
           </TouchableOpacity>
-
-          {/* <TouchableOpacity style={styles.buttonContainer} onPress={() => registrationRequest()}  >
-            <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Sign up</Text>
-          </TouchableOpacity> */}
-
-
-          <View style={{ marginLeft: 20, marginRight: 20, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-
-            <Text style={{ color: '#2E2E2E', fontFamily: 'Poppins-Medium', fontSize: 12, marginBottom: 7, marginTop: 7 }}>Already have ann account  </Text>
-
-            <TouchableOpacity onPress={() => navigation.navigate('login')} style={{ alignItems: 'center' }}>
-              <Text style={{ color: lightTheme.PRIMARY_COLOR, fontFamily: font.BOLD, fontSize: 14, marginBottom: 7, marginTop: 7 }}>Login </Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
       </View>
@@ -267,19 +294,12 @@ const ChangePassword = ({route}) => {
 
 
   return (
-    <ImageBackground
-      source={require('../../assets/primary.png')}
-      style={{ flex: 1 }}
-      resizeMode="cover"
-    >
-      <Container style={{ backgroundColor: 'transparent' }}>
-        <StatusBar barStyle="light-content" backgroundColor={lightTheme.PRIMARY_COLOR} hidden={false} />
+      <Container style={{ backgroundColor: '#fff' }}>
+        <StatusBar barStyle="dark-content" backgroundColor={lightTheme.PRIMARY_COLOR} hidden={false} />
         <Content>
           { renderBody()}
-          
         </Content>
       </Container>
-    </ImageBackground>
   );
 
 
@@ -287,7 +307,7 @@ const ChangePassword = ({route}) => {
 }
 
 
-export default ChangePassword
+export default ChangePasswordSetting
 
 const styles = StyleSheet.create({
   container: {
@@ -307,9 +327,8 @@ const styles = StyleSheet.create({
   },
 
   sideContentReg: {
-    marginTop: 50,
+    marginTop: 5,
     height: Dimensions.get('window').width,
-    justifyContent: 'center',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
   },
@@ -365,7 +384,7 @@ const styles = StyleSheet.create({
     height: 55,
     marginLeft: 20,
     marginRight: 20,
-    marginTop: 10,
+    marginTop: 50,
     borderRadius: 20,
     marginBottom: 10,
     backgroundColor: lightTheme.PRIMARY_COLOR,

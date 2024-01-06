@@ -1,101 +1,74 @@
 // React native and others libraries imports
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { Alert, ImageBackground, TouchableOpacity, Dimensions, Image, StyleSheet, AsyncStorage } from 'react-native';
 import { Container, Content, View, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
-import { PulseIndicator } from 'react-native-indicators';
-import URL from '../../component/server'
+
+import CodeInput from './CodeInput';
+import { font } from '../../constants';
+import { lightTheme } from '../../theme/colors';
 import { Icon } from 'react-native-elements';
-import LinearGradient from 'react-native-linear-gradient';
-import OTPInputView from '@twotalltotems/react-native-otp-input'
-import color from '../../component/color'
-import { getToken, processResponse } from '../../component/utilities';
-import ActivityIndicator from '../../component/view/ActivityIndicator'
-export default class ResetPin_Old extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-     
-    };
-  }
 
 
-  async componentDidMount() {
-   
-  }
 
 
-  getCodeOne(code) {
-    const { OnComplete,  } = this.props;
+
+const ResetPinFirst = ({ OnClose, OnComplete }) => {
+
+  const [code, setCode] = useState("")
+
+
+  const getCodeOne = (code) => {
+
     if (code.length == 4) {
-      OnComplete(code)
+      setCango(true)
     }
   }
 
 
 
-  render() {
-    const { OnClose,  } = this.props;
-      return (
-      <Container style={{ backgroundColor: 'transparent' }}>
-        <Content>
+  return (
+    <Container style={{ backgroundColor: '#fff' }}>
+      <Content>
         <View style={styles.body}>
-      <View style={{ height: 20 }}></View>
-      <View style={{ flexDirection: 'row', paddingLeft: 20, width: Dimensions.get('window').width, marginBottom: 20 }}>
+          <View style={{ height: 20 }}></View>
+          <View style={{ flexDirection: 'row', paddingLeft: 20, width: Dimensions.get('window').width, marginBottom: 2 }}>
       <TouchableOpacity onPress={() => OnClose()} >
           <Icon
             name="arrowleft"
             size={30}
             type='antdesign'
-            color={color.primary_color}
+            color={lightTheme.PRIMARY_COLOR}
           />
         </TouchableOpacity>
         <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
-          <Text style={styles.title}>Old  Pin</Text>
+         
         </View>
         <View style={{ justifyContent: 'center', width: 40, alignItems: 'center' }}></View>
       </View>
+          <View style={styles.mainContent}>
+            <View style={{ justifyContent: 'center', alignItems: 'flex-start', marginBottom: 10, marginTop: 25, marginLeft: 25, marginRight: 25 }}>
+              <Text style={{ color: '#0F0E43', fontFamily: font.BOLD, fontSize: 20 }}>Change Pin </Text>
+              <Text style={{ marginRight: 25, color: lightTheme.BLACK_TEXT_COLOR, fontFamily: 'Poppins-Light', fontSize: 16 }}>Let’s change your PIN for all your transactions.  </Text>
+            </View>
 
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 20, }}>
+              <Text style={{ color: '#0F0E43', fontFamily: font.BOLD, fontSize: 20, marginBottom: 20 }}>Enter Old Pin </Text>
+              <CodeInput onChangeText={(txt) => setCode(txt)} />
+            </View>
 
-      <View style={styles.mainContent}>
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25 }}>
-          <Image
-            style={styles.logo}
-            resizeMode="contain"
-            source={require('../../assets/garden.png')} />
+            <TouchableOpacity style={[styles.buttonContainer, code.length == 4? { backgroundColor: lightTheme.PRIMARY_COLOR,}:{ backgroundColor: "#ADADAD"} ]} onPress={() => OnComplete(code)}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 16 }}>CONTINUE</Text>
+            </TouchableOpacity>
+          </View>
+
         </View>
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25, marginLeft: 25, marginRight: 25 }}>
-          <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>Enter Old Transaction  Pin </Text>
-          <Text style={{ marginLeft: 25, marginRight: 25, textAlign: 'center', color: '#2E2E2E', fontFamily: 'Poppins-Light', fontSize: 12 }}>You will need will need to enter the current transaction pin.  </Text>
-        </View>
+      </Content>
+    </Container>
 
-
-
-
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 20, }}>
-          <OTPInputView
-            style={{
-              width: '60%', height: 70, alignItems: 'center', justifyContent: 'center', color: '#fff',
-            }}
-            pinCount={4}
-            // code={this.state.code} //You can supply this prop or not. The component will be used as a controlled / uncontrolled component respectively.
-            onCodeChanged={code => { this.getCodeOne(code) }}
-            autoFocusOnLoad
-            codeInputFieldStyle={styles.underlineStyleBase}
-            codeInputHighlightStyle={styles.underlineStyleHighLighted}
-            onCodeFilled={(code => {
-              // this.verifyOtp()
-            })}
-          />
-        </View>
-      </View>
-
-    </View>
-        </Content>
-      </Container>
-
-    );
-  }
+  );
 }
+export default ResetPinFirst
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -160,14 +133,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular'
   },
   buttonContainer: {
-    height: 65,
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 55,
     marginLeft: 20,
     marginRight: 20,
-    marginTop: 20,
-    borderRadius: 5,
-    marginBottom: 29,
+    marginTop: 50,
+    borderRadius: 25,
+    marginBottom: 10,
+   
+    justifyContent: 'center', alignItems: 'center',
   },
   underlineStyleBase: {
     width: 45,

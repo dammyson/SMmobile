@@ -2,27 +2,28 @@
 import React, { Component } from 'react';
 import { Alert, ImageBackground, TouchableOpacity, Dimensions, Image, StyleSheet, AsyncStorage } from 'react-native';
 import { Container, Content, View, Text, Button, Left, Right, Body, Title, List, Item, Thumbnail, Grid, Col } from 'native-base';
-import { PulseIndicator } from 'react-native-indicators';
 import URL from '../../component/server'
 import { Icon } from 'react-native-elements';
 import LinearGradient from 'react-native-linear-gradient';
-import OTPInputView from '@twotalltotems/react-native-otp-input'
-import color from '../../component/color'
-import { getToken, processResponse } from '../../component/utilities';
+import { processResponse } from '../../component/utilities';
 import ActivityIndicator from '../../component/view/ActivityIndicator'
 import ResetPinOne from '../../component/view/ResetPinFirst'
 import ResetPinTwo from '../../component/view/ResetPinSecond'
 import ResetPinOld from '../../component/view/ResetPin_Old';
-export default class ChangePin extends Component {
+import { baseUrl, getToken } from '../../utilities';
+
+import { connect } from 'react-redux';
+import { HIDE_LOADER, SHOW_LOADER } from '../../actions/loaderAction';
+import { lightTheme } from '../../theme/colors';
+
+class AddPin extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: [],
       auth: "",
-      type: "",
+      old_pin:"",
       pin: "",
       pin_confirmation: '',
-      loading: false,
       ccode: false,
       confirm: false,
       done: false,
@@ -35,105 +36,109 @@ export default class ChangePin extends Component {
   }
 
 
-  changePinRequest(new_pin_confirmation) {
 
-    const { old_pin, new_pin, auth, type } = this.state
-    if (new_pin == "" || new_pin_confirmation == "" || old_pin == "") {
+  updatePinRequest(pin_confirmation) {
+    const { pin, old_pin, auth, } = this.state
+    if (pin == "" || pin_confirmation == "") {
       Alert.alert('Validation failed', ' Fields cannot be empty', [{ text: 'Okay' }])
       return
     } else {
-
-      if (new_pin == new_pin_confirmation) {
-
+      if (pin == pin_confirmation) {
       } else {
         Alert.alert('Validation failed', 'Pin are not the same pls enter them again', [{ text: 'Okay' }])
         return
       }
-
-
     }
 
-    const formData = new FormData();
-    formData.append('old_pin', old_pin);
-    formData.append('new_pin', new_pin);
-    formData.append('new_pin_confirmation', new_pin_confirmation);
+    let formData = JSON.stringify({
+      old_pin: old_pin,
+      new_pin: pin,
+      new_pin_confirmation: pin_confirmation,
+    })
 
+     console.warn(formData)
+    this.props.showLoading()
 
-    this.setState({ loading: true })
-    fetch(URL.url + '/transaction-pin/update?old_pin=' + old_pin + '&new_pin=' + new_pin + '&new_pin_confirmation=' + new_pin_confirmation, {
-      method: 'PUT', headers: {
+    fetch(baseUrl() + '/transaction-pin/update', {
+      method: 'POST', headers: {
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         'Authorization': 'Bearer ' + auth,
       }, body: formData,
     })
       .then(processResponse)
       .then(res => {
-        this.setState({ loading: false })
+      
+        this.props.hidLoading()
         const { statusCode, data } = res;
         console.warn(statusCode, data);
         if (statusCode === 201) {
-          this.setState({  ccode: false , confirm: false, done: true  })
+          console.warn(statusCode, data, "THISSS");
+          this.setState({ done: true, confirm: false })
+        
         } else {
-          this.setState({  ccode: false , confirm: false })
-          Alert.alert('Operarion failed', 'Please check your phone network and retry', [{ text: 'Okay' }])
+          this.setState({ confirm: false })
+          Alert.alert('Operation failed', data.message, [{ text: 'Okay' }])
         }
-
       })
       .catch((error) => {
-        console.log("Api call error");
         console.warn(error);
         alert(error.message);
-        this.setState({ loading: false , ccode: false , confirm: false})
+        this.props.hidLoading()
       });
 
   }
 
-oldPin(data){
-  this.setState({old_pin: data,ccode: true })
-}
-  firstPin(data){
-    this.setState({new_pin: data, ccode: false , confirm: true })
+  oldPin(data) {
+    this.setState({ old_pin: data, ccode: true })
   }
-  seconePin(data){
-    this.changePinRequest(data)
+  firstPin(data) {
+    console.warn("This is is")
+    this.setState({ pin: data, ccode: false, confirm: true })
+  }
+  seconePin(data) {
+    this.updatePinRequest(data)
   }
 
   render() {
-      return (
-      <Container style={{ backgroundColor: 'transparent' }}>
-        <Content>
-         {this.state.ccode ?
-         this.renderCcode()
-         : this.state.confirm ?
-           this.renderConfirm()
-         : this.state.done ?
-           this.renderDone()
-         : this.renderBody() 
-        }
-        </Content>
-        {this.state.loading ? <ActivityIndicator /> : null}
-      </Container>
+    return (
+      <ImageBackground
+        source={require('../../assets/primary.png')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <Container style={{ backgroundColor: 'transparent' }}>
+          <Content>
+            {this.state.ccode ?
+              this.renderCcode()
+              : this.state.confirm ?
+                this.renderConfirm()
+                : this.state.done ?
+                  this.renderDone()
+                  : this.renderBody()
+            }
+          </Content>
+        </Container>
+      </ImageBackground>
 
     );
   }
 
-
   renderBody() {
-    return(  <ResetPinOld OnClose={()=> this.props.navigation.goBack()}   OnComplete={(data)=> this.oldPin(data)} />
-)
+    return (<ResetPinOld OnClose={() => this.props.navigation.goBack()} OnComplete={(data) => this.oldPin(data)} />
+    )
   }
-
-
   renderCcode() {
-    return(  <ResetPinOne  OnClose={()=> this.setState({ccode:false})}  OnComplete={(data)=> this.firstPin(data)} />
-)
+    return (<ResetPinOne OnClose={() => this.setState({ ccode: false })} OnComplete={(data) => this.firstPin(data)} />
+    )
   }
+
   renderConfirm() {
-    return(  <ResetPinTwo OnClose={()=> this.setState({confirm:false})}  OnComplete={(data)=> this.seconePin(data)} />)
+    return (<ResetPinTwo OnClose={() => this.setState({ confirm: false })} OnComplete={(data) => this.seconePin(data)} />)
   }
 
   renderDone() {
-    return( <View style={styles.body}>
+    return (<View style={styles.body}>
       <View style={{ justifyContent: 'center', flex: 1 }}>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25 }}>
           <Image
@@ -142,25 +147,36 @@ oldPin(data){
             source={require('../../assets/correct.png')} />
         </View>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10, marginTop: 25 }}>
-          <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>Transaction  Pin </Text>
-          <Text style={{ color: '#2E2E2E', fontFamily: 'Poppins-Light', fontSize: 12 }}>Your Transaction  Pin has been Changed  </Text>
+          <Text style={{ color: '#0F0E43', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>All Set </Text>
+          <Text style={{ color: '#2E2E2E', fontFamily: 'Poppins-Light', fontSize: 12 }}>You are all set to explore Sendmonny now.</Text>
         </View>
 
-
-
-        <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#4b47b7', '#0f0e43']} style={styles.buttonContainer} block iconLeft>
-          <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.props.navigation.goBack()}  >
+        <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={[lightTheme.PRIMARY_COLOR, lightTheme.PRIMARY_COLOR]} style={styles.buttonContainer} block iconLeft>
+          <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }} onPress={() => this.props.navigation.replace('home')}  >
             <Text style={{ fontFamily: 'Poppins-SemiBold', color: '#fdfdfd', fontSize: 14 }}>Next</Text>
           </TouchableOpacity>
         </LinearGradient>
       </View>
 
     </View>
-)
+    )
   }
 
 
 }
+
+
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    showLoading: () => dispatch(SHOW_LOADER("Setting pin")),
+    hidLoading: () => dispatch(HIDE_LOADER())
+  }
+};
+export default connect(null, mapDispatchToProps)(AddPin)
+
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
